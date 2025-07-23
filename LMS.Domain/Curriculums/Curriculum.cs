@@ -25,11 +25,22 @@ namespace LMS.Domain.Curriculums
         private Curriculum() : base(Guid.NewGuid()) { }
 
 
-        public static Curriculum Create(Introduction introduction, Title title)
+        public static Result<Curriculum> Create(string titleValue, string introductionValue)
         {
-            var curriculum = new Curriculum(Guid.NewGuid(), introduction, title);
+            Result<Title> titleResult = Title.Create(titleValue);
+            Result<Introduction> introductionResult = Introduction.Create(introductionValue);
+
+            if (titleResult.IsFailure || introductionResult.IsFailure)
+            {
+                return Result.Failure<Curriculum>(titleResult.IsFailure ? titleResult.Error : introductionResult.Error);
+            }
+
+            var curriculum = new Curriculum(Guid.NewGuid(), introductionResult.Value, titleResult.Value);
+
+
             return curriculum;
         }
+
 
         public void AddChapter(Title title , SortOrder sortOrder)
         {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LMS.Application.Curriculums
+namespace LMS.Application.Curriculums.CreateCurriculum
 {
     public sealed record CreateCurriculumRequest(
        string Title,

@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 
 namespace LMS.Domain.Abstractions
 {
-    public record Error(string Code, string Description)
-    {
-        public static readonly Error None = new(string.Empty, string.Empty);
-    }
+    public sealed record ValidationError(IReadOnlyCollection<Error> Errors)
+     : Error("Validation.Failure", "One or more validation errors occurred.");
 }

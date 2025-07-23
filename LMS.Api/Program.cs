@@ -1,7 +1,8 @@
+using LMS.Application;
 using LMS.Application.Curriculums.CreateCurriculum;
+using LMS.Infrastructure;
 using LMS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using LMS.Application;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -12,10 +13,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddApplicationServices(); 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
 
 var app = builder.Build();
 

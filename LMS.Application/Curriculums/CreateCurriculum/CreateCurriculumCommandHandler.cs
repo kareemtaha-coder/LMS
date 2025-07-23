@@ -10,29 +10,32 @@ using System.Threading.Tasks;
 
 namespace LMS.Application.Curriculums.CreateCurriculum
 {
-    public class CreateCurriculumCommandHandler : ICommandHandler<CreateCurriculumCommand, Guid>
+    internal sealed class CreateCurriculumCommandHandler : ICommandHandler<CreateCurriculumCommand, Result<Guid>>
     {
-        private readonly ICurriculumRepository curriculumRepository;
-        private readonly IUnitOfWork unitOfWork;
+        private readonly ICurriculumRepository _curriculumRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
         public CreateCurriculumCommandHandler(ICurriculumRepository curriculumRepository, IUnitOfWork unitOfWork)
         {
-            this.curriculumRepository = curriculumRepository;
-            this.unitOfWork = unitOfWork;
+            _curriculumRepository = curriculumRepository;
+            _unitOfWork = unitOfWork;
         }
 
-        public async Task<Guid> Handle(CreateCurriculumCommand request, CancellationToken cancellationToken)
+        public async Task<Result<Guid>> Handle(CreateCurriculumCommand request, CancellationToken cancellationToken)
         {
+            Result<Curriculum> curriculumResult = Curriculum.Create(request.Title, request.Introduction);
 
-            var title = new Title(request.Title);
-            var introduction = new Introduction(request.Introduction);
-            var curriculum = Curriculum.Create(introduction, title);
+            if (curriculumResult.IsFailure)
+            {
+                return Result.Failure<Guid>(curriculumResult.Error);
+            }
 
-            curriculumRepository.Add(curriculum);
+            _curriculumRepository.Add(curriculumResult.Value);
 
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return curriculum.Id;
+            return curriculumResult.Value.Id;
         }
     }
 }
+
