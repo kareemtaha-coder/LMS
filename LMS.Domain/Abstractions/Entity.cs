@@ -13,6 +13,10 @@ namespace LMS.Domain.Abstractions
         {
             Id = id;
         }
+        protected Entity()
+        {
+
+        }
         public Guid Id { get; init; }
 
         public IReadOnlyCollection<IDomainEvent> GetDomainEvents()

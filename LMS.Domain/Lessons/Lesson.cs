@@ -23,48 +23,88 @@ namespace LMS.Domain.Lessons
             SortOrder = sortOrder;
             ChapterId = chapterId;
         }
-        private Lesson():base(Guid.NewGuid()) { }
-        public static Lesson Create(Title title, SortOrder sortOrder, Guid chapterId)
+
+        // Assumes the Create method on Lesson itself returns a Result<Lesson>
+        public static Result<Lesson> Create(Title title, SortOrder sortOrder, Guid chapterId)
         {
             if (chapterId == Guid.Empty)
             {
-                throw new ArgumentException("Chapter ID cannot be empty.", nameof(chapterId));
+                return Result.Failure<Lesson>(new Error("Lesson.NoChapterId", "Chapter ID cannot be empty."));
             }
 
             return new Lesson(Guid.NewGuid(), title, sortOrder, chapterId);
         }
 
-        // --- دوال إضافة المحتوى ---
+        private Lesson() { } // For EF Core
 
-        public void AddRichTextContent(SortOrder sortOrder, string? arabicText, string? englishText)
+        private Result CheckDuplicateSortOrder(SortOrder sortOrder)
         {
-            var content = RichTextContent.Create(this.Id, sortOrder, arabicText, englishText);
-            _contents.Add(content);
+            return _contents.Any(c => c.SortOrder.Value == sortOrder.Value)
+                ? Result.Failure(LessonErrors.DuplicateSortOrder)
+                : Result.Success();
         }
 
-        public void AddVideoContent(SortOrder sortOrder, string videoUrl)
+        public Result AddRichTextContent(SortOrder sortOrder, string? arabicText, string? englishText)
         {
-            var content = VideoContent.Create(this.Id, sortOrder, videoUrl);
-            _contents.Add(content);
+            var sortOrderCheck = CheckDuplicateSortOrder(sortOrder);
+            if (sortOrderCheck.IsFailure) return sortOrderCheck;
+
+            var contentResult = RichTextContent.Create(this.Id, sortOrder, arabicText, englishText);
+            if (contentResult.IsFailure) return contentResult;
+
+            _contents.Add(contentResult.Value);
+            return Result.Success();
         }
 
-        public void AddImageWithCaptionContent(SortOrder sortOrder, string imageUrl, string? caption)
+        public Result AddVideoContent(SortOrder sortOrder, string videoUrl)
         {
-            var content = ImageWithCaptionContent.Create(this.Id, sortOrder, imageUrl, caption);
-            _contents.Add(content);
+            var sortOrderCheck = CheckDuplicateSortOrder(sortOrder);
+            if (sortOrderCheck.IsFailure) return sortOrderCheck;
+
+            var contentResult = VideoContent.Create(this.Id, sortOrder, videoUrl);
+            if (contentResult.IsFailure) return contentResult;
+
+            _contents.Add(contentResult.Value);
+            return Result.Success();
         }
 
-        public ExamplesGridContent AddExamplesGridContent(SortOrder sortOrder)
+        public Result AddImageWithCaptionContent(SortOrder sortOrder, string imageUrl, string? caption)
         {
-            if (_contents.Any(c => c.SortOrder.Value == sortOrder.Value))
+            var sortOrderCheck = CheckDuplicateSortOrder(sortOrder);
+            if (sortOrderCheck.IsFailure) return sortOrderCheck;
+
+            var contentResult = ImageWithCaptionContent.Create(this.Id, sortOrder, imageUrl, caption);
+            if (contentResult.IsFailure) return contentResult;
+
+            _contents.Add(contentResult.Value);
+            return Result.Success();
+        }
+
+        public Result AddExamplesGridContent(SortOrder sortOrder)
+        {
+            var sortOrderCheck = CheckDuplicateSortOrder(sortOrder);
+            if (sortOrderCheck.IsFailure) return sortOrderCheck;
+
+            var contentResult = ExamplesGridContent.Create(this.Id, sortOrder);
+
+            _contents.Add(contentResult.Value);
+            return Result.Success();
+        }
+
+        public Result AddItemToExamplesGrid(Guid contentId, string imageUrl, string? audioUrl)
+        {
+            var content = _contents.FirstOrDefault(c => c.Id == contentId);
+            if (content is null)
             {
-                throw new InvalidOperationException($"A content item with sort order {sortOrder.Value} already exists in this lesson.");
+                return Result.Failure(LessonErrors.ContentNotFound);
             }
-            var content = ExamplesGridContent.Create(this.Id, sortOrder);
-            _contents.Add(content);
 
-            // نعيد الكائن للسماح بإضافة الأمثلة عليه مباشرةً
-            return content;
+            if (content is not ExamplesGridContent grid)
+            {
+                return Result.Failure(LessonErrors.InvalidContentType);
+            }
+
+            return grid.AddExampleItem(imageUrl, audioUrl);
         }
     }
 }

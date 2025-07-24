@@ -1,4 +1,5 @@
 ﻿using LMS.Domain.Abstractions;
+using LMS.Domain.Curriculums;
 using LMS.Domain.Lessons;
 using LMS.Domain.Shared.ValueObjects;
 using System;
@@ -9,46 +10,56 @@ using System.Threading.Tasks;
 
 namespace LMS.Domain.Chapters
 {
-    public class Chapter:Entity
+    public sealed class Chapter : Entity
     {
+        private readonly List<Lesson> _lessons = new();
+
+        public Title Title { get; private set; } = default!;
+        public Guid CurriculumId { get; private set; }
+        public SortOrder SortOrder { get; private set; } = default!;
+        public IReadOnlyCollection<Lesson> Lessons => _lessons.AsReadOnly();
+
         private Chapter(Guid id, Title title, Guid curriculumId, SortOrder sortOrder) : base(id)
         {
             Title = title;
             CurriculumId = curriculumId;
             SortOrder = sortOrder;
         }
-        private Chapter() : base(Guid.NewGuid()) { }
 
-        public Title Title { get; private set; }
-        public Guid CurriculumId { get; private set; }
-        public SortOrder SortOrder { get;private set; }
-        private readonly List<Lesson> lessons = new();
-        public IReadOnlyCollection<Lesson> Lessons => lessons.AsReadOnly();
+        // Updated constructor to call base constructor explicitly
+        private Chapter() { } // For EF Core
 
-        public static Chapter Create(Title title, Guid curriculumId, SortOrder sortOrder)
+        public static Result<Chapter> Create(Title title, Guid curriculumId, SortOrder sortOrder)
         {
             if (curriculumId == Guid.Empty)
             {
-                throw new ArgumentException("Curriculum ID cannot be empty.", nameof(curriculumId));
+                // We return a failure result, not an exception
+                return Result.Failure<Chapter>(new Error(
+                    "Chapter.MissingCurriculumId",
+                    "The curriculum ID is required to create a chapter."));
             }
+
             var chapter = new Chapter(Guid.NewGuid(), title, curriculumId, sortOrder);
+
+            // The 'Result' class has an implicit conversion, so this is the same as 'Result.Success(chapter)'
             return chapter;
         }
 
-        public void AddLesson(Title title, SortOrder sortOrder)
+        internal Result AddLesson(Title title, SortOrder sortOrder)
         {
-            // قاعدة عمل اختيارية: منع تكرار الدروس بنفس العنوان داخل نفس الفصل
-            if (lessons.Any(l => l.Title.Value == title.Value))
+            if (_lessons.Any(l => l.Title.Value == title.Value))
             {
-                throw new InvalidOperationException("A lesson with this title already exists in this chapter.");
+                return Result.Failure(CurriculumErrors.DuplicateLessonTitle);
             }
 
-            // إنشاء الدرس الجديد من خلال الـ Factory الخاص به
-            var lesson = Lesson.Create(title, sortOrder, this.Id);
+            var lessonResult = Lesson.Create(title, sortOrder, this.Id);
+            if (lessonResult.IsFailure)
+            {
+                return lessonResult;
+            }
 
-            // إضافة الدرس للقائمة الداخلية
-            lessons.Add(lesson);
+            _lessons.Add(lessonResult.Value);
+            return Result.Success();
         }
-
     }
 }

@@ -25,13 +25,13 @@ namespace LMS.Infrastructure.Persistence
 
         public DbSet<Supervisor> Supervisors { get; set; }
         public DbSet<Curriculum> Curriculums { get; set; }
-        public DbSet<Chapter> Chapters { get; set; }
-        public DbSet<Lesson> Lessons { get; set; }
+        //public DbSet<Chapter> Chapters { get; set; }
+        //public DbSet<Lesson> Lessons { get; set; }
 
-        // نضيف DbSet للكلاس الأساسي فقط، وEF Core سيفهم الباقي
-        public DbSet<LessonContent> LessonContents { get; set; }
+        //// نضيف DbSet للكلاس الأساسي فقط، وEF Core سيفهم الباقي
+        //public DbSet<LessonContent> LessonContents { get; set; }
 
-        public DbSet<ExampleItem> ExampleItems { get; set; }
+        //public DbSet<ExampleItem> ExampleItems { get; set; }
 
 
         // --- 2. تكوين الموديل باستخدام Fluent API ---

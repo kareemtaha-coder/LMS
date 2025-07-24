@@ -8,11 +8,6 @@ using System.Threading.Tasks;
 
 namespace LMS.Domain.Lessons
 {
-    //--- 1. الكيان الابن: ExampleItem ---
-
-    /// <summary>
-    /// يمثل مثالاً واحدًا داخل شبكة الأمثلة، يحتوي على صورة وصوت اختياري.
-    /// </summary>
     public sealed class ExampleItem : Entity
     {
         public Guid ExamplesGridContentId { get; private set; }
@@ -25,58 +20,22 @@ namespace LMS.Domain.Lessons
             ImageUrl = imageUrl;
             AudioUrl = audioUrl;
         }
-        private ExampleItem() : base(Guid.NewGuid()) { }
 
-        /// <summary>
-        /// دالة الإنشاء داخلية (internal) لتضمن أن ExamplesGridContent هو الوحيد الذي يمكنه إنشاؤها.
-        /// </summary>
-        internal static ExampleItem Create(Guid parentId, string imageUrl, string? audioUrl)
+        private ExampleItem()  { } // For EF Core
+
+        internal static Result<ExampleItem> Create(Guid parentId, string imageUrl, string? audioUrl)
         {
             if (string.IsNullOrWhiteSpace(imageUrl))
             {
-                throw new ArgumentException("Example item image URL cannot be empty.", nameof(imageUrl));
+                return Result.Failure<ExampleItem>(LessonErrors.EmptyUrl(nameof(ExampleItem)));
             }
 
-            return new ExampleItem(Guid.NewGuid(), parentId, imageUrl, audioUrl);
+            var item = new ExampleItem(Guid.NewGuid(), parentId, imageUrl, audioUrl);
+
+            // This implicitly returns Result.Success(item)
+            return item;
         }
     }
 
-
-    //--- 2. الكيان الأب: ExamplesGridContent ---
-
-    /// <summary>
-    /// يمثل قطعة محتوى من نوع "شبكة أمثلة".
-    /// هو الـ Aggregate Root لكيانات ExampleItem.
-    /// </summary>
-    public sealed class ExamplesGridContent : LessonContent
-    {
-        private readonly List<ExampleItem> _exampleItems = new();
-        public IReadOnlyCollection<ExampleItem> ExampleItems => _exampleItems.AsReadOnly();
-        private ExamplesGridContent() : base(Guid.NewGuid(), Guid.Empty, new SortOrder(1)) { }
-        private ExamplesGridContent(Guid id, Guid lessonId, SortOrder sortOrder)
-            : base(id, lessonId, sortOrder)
-        {
-        }
-
-        public static ExamplesGridContent Create(Guid lessonId, SortOrder sortOrder)
-        {
-            // هذا الكيان هو مجرد حاوية، لذا لا يحتاج لبارامترات إضافية عند إنشائه.
-            return new ExamplesGridContent(Guid.NewGuid(), lessonId, sortOrder);
-        }
-
-        /// <summary>
-        /// دالة لإضافة مثال جديد إلى الشبكة.
-        /// </summary>
-        public void AddExampleItem(string imageUrl, string? audioUrl)
-        {
-            // قاعدة عمل: لا يمكن أن تحتوي الشبكة على أكثر من 6 أمثلة
-            if (_exampleItems.Count >= 6)
-            {
-                throw new InvalidOperationException("Cannot add more than 6 examples to a single grid.");
-            }
-
-            var exampleItem = ExampleItem.Create(Id, imageUrl, audioUrl);
-            _exampleItems.Add(exampleItem);
-        }
-    }
 }
+
