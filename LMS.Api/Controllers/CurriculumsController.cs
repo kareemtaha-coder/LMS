@@ -1,70 +1,69 @@
 ﻿using LMS.Application.Curriculums.CreateCurriculum;
+using LMS.Application.Features.Curriculums.GetAllCurriculums;
+using LMS.Application.Features.Curriculums.GetCurriculum;
 using LMS.Domain.Abstractions;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Reflection;
 
 namespace LMS.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CurriculumsController : ControllerBase
+    public class CurriculumsController(ISender sender) : ApiControllerBase(sender)
     {
-        private readonly ISender _sender;
+        private readonly ISender _sender = sender;
 
-        public CurriculumsController(ISender sender)
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetCurriculumById(Guid id, CancellationToken cancellationToken)
         {
-            _sender = sender;
+            // 1. إنشاء الـ Query
+            var query = new GetCurriculumQuery(id);
+
+            // 2. إرسال الـ Query إلى MediatR
+            var result = await _sender.Send(query, cancellationToken);
+
+            // 3. ترجمة النتيجة إلى استجابة HTTP
+            return result.IsSuccess
+                ? Ok(result.Value)
+                : NotFound(result.Error);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateCurriculum(
-            [FromBody] CreateCurriculumRequest request)
-        {
-            var command = new CreateCurriculumCommand(request.Title, request.Introduction);
-
-            Result<Guid> result = await _sender.Send(command);
-
-            if (result.IsFailure)
+            // This is the new endpoint
+            [HttpGet]
+            [ProducesResponseType(typeof(IReadOnlyList<CurriculumSummaryResponse>), StatusCodes.Status200OK)]
+            public async Task<IActionResult> GetAllCurriculums(CancellationToken cancellationToken)
             {
-                // التعامل مع أخطاء الـ validation يبقى كما هو لأنه صحيح
-                if (result.Error is ValidationError validationError)
-                {
-                    var details = new ValidationProblemDetails(
-                        validationError.Errors.ToDictionary(e => e.Code, e => new[] { e.Description })
-                    );
-                    return new BadRequestObjectResult(details);
-                }
+                var query = new GetAllCurriculumsQuery();
 
-                // --- الجزء الذي تم تصحيحه ---
-                // 1. إنشاء كائن ProblemDetails يدوياً
-                var problemDetails = new ProblemDetails
-                {
-                    Status = StatusCodes.Status400BadRequest,
-                    Title = "Bad Request",
-                    Detail = result.Error.Description
-                };
+                var result = await Sender.Send(query, cancellationToken);
 
-                // 2. إضافة الأخطاء المخصصة إلى خاصية Extensions
-                problemDetails.Extensions.Add("errors", new[] { result.Error });
-
-                // 3. إرجاع الكائن باستخدام ObjectResult مع تحديد الـ StatusCode
-                return new ObjectResult(problemDetails)
-                {
-                    StatusCode = problemDetails.Status
-                };
+                // For a query, a failure is unlikely but good to handle.
+                // A success result with an empty list is a valid scenario.
+                return result.IsSuccess ? Ok(result.Value) : HandleFailure(result);
             }
 
-            return CreatedAtAction(
-                nameof(GetCurriculum),
-                new { id = result.Value },
-                result.Value);
-        }
+            [HttpPost]
+            [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+            [ProducesResponseType(StatusCodes.Status400BadRequest)]
+            public async Task<IActionResult> CreateCurriculum(
+                [FromBody] CreateCurriculumCommand command,
+                CancellationToken cancellationToken)
+            {
+                var result = await Sender.Send(command, cancellationToken);
 
-        [HttpGet("{id:guid}", Name = "GetCurriculum")]
-        public IActionResult GetCurriculum(Guid id)
-        {
-            return Ok($"Get curriculum with ID: {id}");
+                if (result.IsFailure)
+                {
+                    return HandleFailure(result);
+                }
+
+                return CreatedAtAction(
+                    nameof(GetCurriculumById),
+                    new { id = result.Value },
+                    result.Value);
+            }
+
+
         }
     }
-}

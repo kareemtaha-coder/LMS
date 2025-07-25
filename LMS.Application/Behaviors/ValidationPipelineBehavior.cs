@@ -5,73 +5,99 @@ using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace LMS.Application.Behaviors
+namespace LMS.Application.Behaviors;
+
+/// <summary>
+/// A MediatR pipeline behavior that intercepts commands and performs validation
+/// before they reach their handlers.
+/// </summary>
+public sealed class ValidationPipelineBehavior<TRequest, TResponse>
+    : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : ICommand<TResponse>
+    where TResponse : Result
 {
-    public class ValidationPipelineBehavior<TRequest, TResponse>
-         : IPipelineBehavior<TRequest, TResponse>
-         where TRequest : ICommand<TResponse>
-         where TResponse : Result
+    private readonly IEnumerable<IValidator<TRequest>> _validators;
+
+    public ValidationPipelineBehavior(IEnumerable<IValidator<TRequest>> validators)
     {
-        private readonly IEnumerable<IValidator<TRequest>> _validators;
+        _validators = validators;
+    }
 
-        public ValidationPipelineBehavior(IEnumerable<IValidator<TRequest>> validators)
+    public async Task<TResponse> Handle(
+        TRequest request,
+        RequestHandlerDelegate<TResponse> next,
+        CancellationToken cancellationToken)
+    {
+        // If there are no validators, immediately proceed to the handler.
+        if (!_validators.Any())
         {
-            _validators = validators;
-        }
-
-        public async Task<TResponse> Handle(
-         TRequest request,
-         RequestHandlerDelegate<TResponse> next,
-         CancellationToken cancellationToken)
-        {
-            if (!_validators.Any())
-            {
-                return await next();
-            }
-
-            var validationFailures = _validators
-                .Select(validator => validator.Validate(request))
-                .SelectMany(validationResult => validationResult.Errors)
-                .Where(validationFailure => validationFailure is not null)
-                .ToList();
-            if (validationFailures.Any())
-            {
-                // 1. Convert all validation failures into our own Error objects.
-                var errors = validationFailures
-                    .Select(f => new Error(f.PropertyName, f.ErrorMessage))
-                    .ToList();
-
-                // 2. Create the special ValidationError that contains the list of errors.
-                var validationError = new ValidationError(errors);
-
-                // 3. Create the failure result, passing our new ValidationError.
-                return CreateFailureResult(validationError);
-            }
             return await next();
         }
 
-        private static TResponse CreateFailureResult(Error error)
+        // Concurrently execute all validators and collect the validation failures.
+        var validationFailures = (await Task.WhenAll(
+            _validators.Select(v => v.ValidateAsync(request, cancellationToken))))
+            .SelectMany(validationResult => validationResult.Errors)
+            .Where(failure => failure is not null)
+            .ToList();
+
+        // If any failures are found, short-circuit the pipeline and return a failure result.
+        if (validationFailures.Any())
         {
-            // Get the generic argument type from the response (e.g., Guid from Result<Guid>)
-            var genericArgument = typeof(TResponse).GetGenericArguments()[0];
+            // Convert the list of validation failures into our custom domain Error objects.
+            var errors = validationFailures
+                .Select(f => new Error(f.PropertyName, f.ErrorMessage))
+                .ToList();
 
-            // Find the generic method "Failure<T>" on the Result class
-            var failureMethod = typeof(Result)
-                .GetMethod(nameof(Result.Failure), 1, new[] { typeof(Error) });
+            // Create a special validation error that encapsulates all the individual errors.
+            //var validationError = new ValidationError(errors);
+            var validationError = new ValidationError(
+                  validationFailures.Select(failure =>
+                      new ValidationErrorDetail(failure.PropertyName, failure.ErrorMessage))
+                  .ToList());
 
-            if (failureMethod is null)
-            {
-                throw new InvalidOperationException("Unable to find generic Failure method on Result class.");
-            }
 
-            // Create a specific method, e.g., Failure<Guid>(Error)
-            var genericFailureMethod = failureMethod.MakeGenericMethod(genericArgument);
-
-            // Invoke the method and return the result
-            return (TResponse)genericFailureMethod.Invoke(null, new object[] { error })!;
+            // Use the robust helper method to create the appropriate failure Result.
+            return CreateFailureResult(validationError);
         }
+
+        // If validation succeeds, proceed to the actual request handler.
+        return await next();
+    }
+
+    /// <summary>
+    /// Creates a failure result of the correct generic type using reflection.
+    /// This is a robust implementation that handles both non-generic and generic Result types.
+    /// </summary>
+    private static TResponse CreateFailureResult(Error error)
+    {
+        // Handle the simple, non-generic Result case first.
+        if (typeof(TResponse) == typeof(Result))
+        {
+            return (Result.Failure(error) as TResponse)!;
+        }
+
+        // Handle the generic Result<T> case.
+        var resultType = typeof(TResponse);
+        var genericArgument = resultType.GetGenericArguments()[0];
+
+        // Find the static, generic "Failure" method on the base Result class.
+        var failureMethod = typeof(Result)
+            .GetMethod(nameof(Result.Failure), 1, new[] { typeof(Error) });
+
+        if (failureMethod is null)
+        {
+            // This should be unreachable if TResponse is a valid Result<T>.
+            throw new InvalidOperationException("Could not find the generic Failure method on the Result class.");
+        }
+
+        // Create a specific version of the method, e.g., Result.Failure<Guid>(error).
+        var genericFailureMethod = failureMethod.MakeGenericMethod(genericArgument);
+
+        // Invoke the static method and cast the result to the expected response type.
+        return (TResponse)genericFailureMethod.Invoke(null, new object[] { error })!;
     }
 }

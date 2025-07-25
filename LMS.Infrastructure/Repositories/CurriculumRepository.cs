@@ -1,5 +1,6 @@
 ﻿using LMS.Domain.Curriculums;
 using LMS.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,12 @@ namespace LMS.Infrastructure.Repositories
 
         public Task<Curriculum?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            // We use .Include() to eagerly load the Chapters collection.
+            // This is crucial for the AddChapter command handler, as it needs to
+            // operate on the full Curriculum aggregate root.
+            return _context.Curriculums
+                .Include(c => c.Chapters)
+                .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
         }
     }
 }

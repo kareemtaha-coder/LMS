@@ -6,7 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LMS.Application.Features.Curriculums.GetAllCurriculums
+namespace LMS.Application.Features.Curriculums.Chapters.GetChapterById
 {
-    public sealed record GetAllCurriculumsQuery() : IQuery<Result<IReadOnlyList<CurriculumSummaryResponse>>>;
+    public sealed record GetChapterByIdQuery(Guid ChapterId)
+     : IQuery<Result<ChapterWithLessonsResponse>>;
 }

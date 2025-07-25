@@ -1,4 +1,5 @@
-﻿using LMS.Domain.Chapters;
+﻿using LMS.Application.Abstractions.Data;
+using LMS.Domain.Chapters;
 using LMS.Domain.Curriculums;
 using LMS.Domain.Lessons;
 using LMS.Domain.Supervisor;
@@ -13,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace LMS.Infrastructure.Persistence
 {
-    public class ApplicationDbContext:IdentityDbContext<ApplicationUser>
+    public class ApplicationDbContext:IdentityDbContext<ApplicationUser>,IApplicationDbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
        : base(options)
@@ -25,13 +26,13 @@ namespace LMS.Infrastructure.Persistence
 
         public DbSet<Supervisor> Supervisors { get; set; }
         public DbSet<Curriculum> Curriculums { get; set; }
-        //public DbSet<Chapter> Chapters { get; set; }
-        //public DbSet<Lesson> Lessons { get; set; }
+        public DbSet<Chapter> Chapter { get; set; }
+        public DbSet<Lesson> Lesson { get; set; }
 
         //// نضيف DbSet للكلاس الأساسي فقط، وEF Core سيفهم الباقي
-        //public DbSet<LessonContent> LessonContents { get; set; }
+        public DbSet<LessonContent> LessonContent { get; set; }
 
-        //public DbSet<ExampleItem> ExampleItems { get; set; }
+        public DbSet<ExampleItem> ExampleItem { get; set; }
 
 
         // --- 2. تكوين الموديل باستخدام Fluent API ---

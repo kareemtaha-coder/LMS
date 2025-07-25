@@ -22,21 +22,21 @@ namespace LMS.Application.Features.Curriculums.DeleteCurriculum
 
         public async Task<Result> Handle(DeleteCurriculumCommand request, CancellationToken cancellationToken)
         {
-            // 1. العثور على المنهج باستخدام الـ Repository
-            var curriculum = await _curriculumRepository.GetByIdAsync(request.CurriculumId, cancellationToken);
+            //// 1. العثور على المنهج باستخدام الـ Repository
+            //var curriculum = await _curriculumRepository.GetByIdAsync(request.CurriculumId, cancellationToken);
 
-            if (curriculum is null)
-            {
-                return Result.Failure(new Error(
-                    "Curriculum.NotFound",
-                    $"The curriculum with ID '{request.CurriculumId}' was not found."));
-            }
+            //if (curriculum is null)
+            //{
+            //    return Result.Failure(new Error(
+            //        "Curriculum.NotFound",
+            //        $"The curriculum with ID '{request.CurriculumId}' was not found."));
+            //}
 
-            // 2. طلب الحذف من الـ Repository
-            _curriculumRepository.Delete(curriculum);
+            //// 2. طلب الحذف من الـ Repository
+            //_curriculumRepository.Delete(curriculum);
 
-            // 3. حفظ التغييرات في قاعدة البيانات
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            //// 3. حفظ التغييرات في قاعدة البيانات
+            //await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Success();
         }
