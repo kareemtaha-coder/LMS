@@ -62,7 +62,6 @@ namespace LMS.Infrastructure.Persistence
                 .HasValue<ImageWithCaptionContent>("ImageWithCaption")
                 .HasValue<ExamplesGridContent>("ExamplesGrid");
 
-
             // --- إعداد العلاقات (Relationships) ---
             // EF Core ذكي كفاية لاكتشاف معظم العلاقات،
             // لكن من الجيد تعريفها بوضوح هنا

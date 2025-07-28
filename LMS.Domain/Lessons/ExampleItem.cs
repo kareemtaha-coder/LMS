@@ -14,7 +14,7 @@ namespace LMS.Domain.Lessons
         public string ImageUrl { get; private set; }
         public string? AudioUrl { get; private set; }
 
-        private ExampleItem(Guid id, Guid examplesGridContentId, string imageUrl, string? audioUrl) : base(id)
+        private ExampleItem( Guid examplesGridContentId, string imageUrl, string? audioUrl)
         {
             ExamplesGridContentId = examplesGridContentId;
             ImageUrl = imageUrl;
@@ -30,7 +30,7 @@ namespace LMS.Domain.Lessons
                 return Result.Failure<ExampleItem>(LessonErrors.EmptyUrl(nameof(ExampleItem)));
             }
 
-            var item = new ExampleItem(Guid.NewGuid(), parentId, imageUrl, audioUrl);
+            var item = new ExampleItem( parentId, imageUrl, audioUrl);
 
             // This implicitly returns Result.Success(item)
             return item;

@@ -33,7 +33,21 @@ namespace LMS.Domain.Lessons
             var content = new VideoContent(Guid.NewGuid(), lessonId, sortOrder, videoUrl);
             return content;
         }
+        internal Result Update(string newVideoUrl)
+        {
+            if (string.IsNullOrWhiteSpace(newVideoUrl))
+            {
+                return Result.Failure(LessonErrors.EmptyUrl(nameof(VideoContent)));
+            }
 
+            if (!Uri.TryCreate(newVideoUrl, UriKind.Absolute, out _))
+            {
+                return Result.Failure(LessonErrors.InvalidUrl(nameof(VideoContent)));
+            }
+
+            VideoUrl = newVideoUrl;
+            return Result.Success();
+        }
         private VideoContent() { } // For EF Core
     }
 }

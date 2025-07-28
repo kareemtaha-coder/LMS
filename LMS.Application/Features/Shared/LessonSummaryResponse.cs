@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LMS.Application.Features.Curriculums.Chapters.GetChapterById
+namespace LMS.Application.Features.Shared
 {
     public sealed record LessonSummaryResponse(
     Guid Id,

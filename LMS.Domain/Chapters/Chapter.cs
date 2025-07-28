@@ -61,5 +61,25 @@ namespace LMS.Domain.Chapters
             _lessons.Add(lessonResult.Value);
             return Result.Success();
         }
+        internal Result<IReadOnlyList<LessonContent>> RemoveLesson(Guid lessonId)
+        {
+            var lessonToRemove = _lessons.FirstOrDefault(l => l.Id == lessonId);
+            if (lessonToRemove is null)
+            {
+                return Result.Failure<IReadOnlyList<LessonContent>>(CurriculumErrors.LessonNotFound);
+            }
+
+            var contentsToDelete = lessonToRemove.Contents.ToList();
+            _lessons.Remove(lessonToRemove);
+
+            return contentsToDelete;
+        }
+        internal Result UpdateTitle(Title newTitle)
+        {
+            // Add any specific validation for a chapter's title if needed.
+            // For now, the Title value object's own validation is sufficient.
+            Title = newTitle;
+            return Result.Success();
+        }
     }
 }

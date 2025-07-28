@@ -81,6 +81,9 @@ namespace LMS.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ChapterId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ChapterId");
@@ -355,6 +358,9 @@ namespace LMS.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("EnglishText")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("NoteType")
+                        .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("RichText");
                 });

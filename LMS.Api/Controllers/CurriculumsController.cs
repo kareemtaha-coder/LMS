@@ -1,6 +1,8 @@
 ﻿using LMS.Application.Curriculums.CreateCurriculum;
+using LMS.Application.Features.Curriculums.DeleteCurriculum;
 using LMS.Application.Features.Curriculums.GetAllCurriculums;
 using LMS.Application.Features.Curriculums.GetCurriculum;
+using LMS.Application.Features.Curriculums.UpdateCurriculum;
 using LMS.Domain.Abstractions;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -63,7 +65,46 @@ namespace LMS.Api.Controllers
                     new { id = result.Value },
                     result.Value);
             }
+        [HttpPut("{curriculumId:guid}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdateCurriculum(
+        Guid curriculumId,
+        [FromBody] UpdateCurriculumRequest request,
+        CancellationToken cancellationToken)
+        {
+            var command = new UpdateCurriculumCommand(
+                curriculumId,
+                request.Title,
+                request.Introduction);
 
+            var result = await Sender.Send(command, cancellationToken);
 
+            if (result.IsFailure)
+            {
+                return HandleFailure(result);
+            }
+
+            return NoContent();
         }
+
+        [HttpDelete("{curriculumId:guid}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> DeleteCurriculum(
+       Guid curriculumId,
+       CancellationToken cancellationToken)
+        {
+            var command = new DeleteCurriculumCommand(curriculumId);
+            var result = await Sender.Send(command, cancellationToken);
+
+            if (result.IsFailure)
+            {
+                return HandleFailure(result);
+            }
+
+            return NoContent();
+        }
+
+    }
     }

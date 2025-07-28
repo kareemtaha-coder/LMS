@@ -1,5 +1,6 @@
 ﻿using LMS.Application.Abstractions.Data;
 using LMS.Application.Abstractions.Messaging;
+using LMS.Application.Features.Shared;
 using LMS.Domain.Abstractions;
 using LMS.Domain.Chapters;
 using Microsoft.EntityFrameworkCore;

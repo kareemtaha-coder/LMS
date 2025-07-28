@@ -19,6 +19,9 @@ namespace LMS.Application.Abstractions.Data
         DbSet<Curriculum> Curriculums { get; }
         public DbSet<Chapter> Chapter { get; set; }
         public DbSet<Lesson> Lesson { get; set; }
+        public DbSet<LessonContent> LessonContent { get; set; }
+        public DbSet<ExampleItem> ExampleItem { get; set; }
+
 
 
         /// <summary>

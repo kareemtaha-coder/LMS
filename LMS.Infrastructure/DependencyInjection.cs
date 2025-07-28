@@ -1,8 +1,10 @@
 ﻿using LMS.Application.Abstractions.Data;
+using LMS.Application.Abstractions.Services;
 using LMS.Domain.Abstractions;
 using LMS.Domain.Curriculums;
 using LMS.Infrastructure.Persistence;
 using LMS.Infrastructure.Repositories;
+using LMS.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +32,8 @@ namespace LMS.Infrastructure
 
             // Register the Unit of Work
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+            services.AddScoped<IFileService, FileService>();
 
             return services;
         }

@@ -20,6 +20,16 @@ namespace LMS.Domain.Lessons
             SortOrder = sortOrder;
         }
 
-        protected LessonContent() { } 
+        protected LessonContent() { }
+
+        internal void UpdateSortOrder(int newOrder)
+        {
+            var sortOrderResult = SortOrder.Create(newOrder);
+            if (sortOrderResult.IsSuccess)
+            {
+                SortOrder = sortOrderResult.Value;
+            }
+        }
+
     }
 }

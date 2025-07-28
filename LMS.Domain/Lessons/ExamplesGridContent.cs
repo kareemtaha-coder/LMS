@@ -48,5 +48,16 @@ namespace LMS.Domain.Lessons
 
             return Result.Success();
         }
+        internal Result<ExampleItem> RemoveExampleItem(Guid itemId)
+        {
+            var itemToRemove = _exampleItems.FirstOrDefault(i => i.Id == itemId);
+            if (itemToRemove is null)
+            {
+                return Result.Failure<ExampleItem>(new Error("ExampleItem.NotFound", "The specified item was not found in this grid."));
+            }
+
+            _exampleItems.Remove(itemToRemove);
+            return itemToRemove; // Return the removed item
+        }
     }
 }
