@@ -1,4 +1,5 @@
 ﻿using LMS.Domain.Lessons;
+using LMS.Domain.Shared.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,5 +8,5 @@ using System.Threading.Tasks;
 
 namespace LMS.Application.Features.LessonContents.UpdateRichTextContent
 {
-    public sealed record UpdateRichTextContentRequest(string? ArabicText, string? EnglishText, NoteType NoteType);
+    public sealed record UpdateRichTextContentRequest(string? ArabicText, string? EnglishText, NoteType NoteType, Title title);
 }

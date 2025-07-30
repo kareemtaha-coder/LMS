@@ -63,49 +63,49 @@ namespace LMS.Domain.Lessons
                 : Result.Success();
         }
 
-        public Result AddRichTextContent(SortOrder sortOrder, string? arabicText, string? englishText, NoteType noteType)
+        public Result AddRichTextContent(SortOrder sortOrder, string? arabicText, string? englishText, NoteType noteType, Title title)
         {
             var sortOrderCheck = CheckDuplicateSortOrder(sortOrder);
             if (sortOrderCheck.IsFailure) return sortOrderCheck;
 
             // Pass the new noteType parameter to the Create method
-            var contentResult = RichTextContent.Create(this.Id, sortOrder, arabicText, englishText, noteType);
+            var contentResult = RichTextContent.Create(this.Id, sortOrder, arabicText, englishText, noteType,title);
             if (contentResult.IsFailure) return contentResult;
 
             _contents.Add(contentResult.Value);
             return Result.Success();
         }
 
-        public Result AddVideoContent(SortOrder sortOrder, string videoUrl)
+        public Result AddVideoContent(SortOrder sortOrder, string videoUrl, Title title)
         {
             var sortOrderCheck = CheckDuplicateSortOrder(sortOrder);
             if (sortOrderCheck.IsFailure) return sortOrderCheck;
 
-            var contentResult = VideoContent.Create(this.Id, sortOrder, videoUrl);
+            var contentResult = VideoContent.Create(this.Id, sortOrder, videoUrl, title);
             if (contentResult.IsFailure) return contentResult;
 
             _contents.Add(contentResult.Value);
             return Result.Success();
         }
 
-        public Result AddImageWithCaptionContent(SortOrder sortOrder, string imageUrl, string? caption)
+        public Result AddImageWithCaptionContent(SortOrder sortOrder, string imageUrl, string? caption, Title title)
         {
             var sortOrderCheck = CheckDuplicateSortOrder(sortOrder);
             if (sortOrderCheck.IsFailure) return sortOrderCheck;
 
-            var contentResult = ImageWithCaptionContent.Create(this.Id, sortOrder, imageUrl, caption);
+            var contentResult = ImageWithCaptionContent.Create(this.Id, sortOrder, imageUrl, caption,title);
             if (contentResult.IsFailure) return contentResult;
 
             _contents.Add(contentResult.Value);
             return Result.Success();
         }
 
-        public Result AddExamplesGridContent(SortOrder sortOrder)
+        public Result AddExamplesGridContent(SortOrder sortOrder,Title title)
         {
             var sortOrderCheck = CheckDuplicateSortOrder(sortOrder);
             if (sortOrderCheck.IsFailure) return sortOrderCheck;
 
-            var contentResult = ExamplesGridContent.Create(this.Id, sortOrder);
+            var contentResult = ExamplesGridContent.Create(this.Id, sortOrder,title);
 
             _contents.Add(contentResult.Value);
             return Result.Success();

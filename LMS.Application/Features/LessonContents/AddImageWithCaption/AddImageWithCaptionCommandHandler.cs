@@ -28,15 +28,27 @@ namespace LMS.Application.Features.LessonContents.AddImageWithCaption
             {
                 return Result.Failure<Guid>(new Error("Lesson.NotFound", "The specified lesson could not be found."));
             }
+            Title title = null;
+            if (!string.IsNullOrEmpty(request.Title))
+            {
+                var titleResult = Title.Create(request.Title);
+                if (titleResult.IsFailure) return Result.Failure<Guid>(titleResult.Error);
+                title = titleResult.Value;
+            }
+
+
 
             var sortOrderResult = SortOrder.Create(request.SortOrder);
+
+
             if (sortOrderResult.IsFailure) return Result.Failure<Guid>(sortOrderResult.Error);
 
             var addContentResult = curriculum.AddImageWithCaptionContentToLesson(
-                request.LessonId,
-                sortOrderResult.Value,
-                request.ImageUrl,
-                request.Caption);
+           request.LessonId,
+           sortOrderResult.Value,
+           request.ImageUrl,
+           request.Caption,
+           title!);
 
             if (addContentResult.IsFailure)
             {

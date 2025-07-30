@@ -12,13 +12,13 @@ namespace LMS.Domain.Lessons
     {
         public string VideoUrl { get; private set; }
 
-        private VideoContent(Guid id, Guid lessonId, SortOrder sortOrder, string videoUrl)
-            : base(id, lessonId, sortOrder)
+        private VideoContent(Guid id, Guid lessonId, SortOrder sortOrder, string videoUrl,Title title)
+            : base(id, lessonId, sortOrder, title)
         {
             VideoUrl = videoUrl;
         }
 
-        internal static Result<VideoContent> Create(Guid lessonId, SortOrder sortOrder, string videoUrl)
+        internal static Result<VideoContent> Create(Guid lessonId, SortOrder sortOrder, string videoUrl, Title title)
         {
             if (string.IsNullOrWhiteSpace(videoUrl))
             {
@@ -30,7 +30,7 @@ namespace LMS.Domain.Lessons
                 return Result.Failure<VideoContent>(LessonErrors.InvalidUrl(nameof(VideoContent)));
             }
 
-            var content = new VideoContent(Guid.NewGuid(), lessonId, sortOrder, videoUrl);
+            var content = new VideoContent(Guid.NewGuid(), lessonId, sortOrder, videoUrl, title);
             return content;
         }
         internal Result Update(string newVideoUrl)

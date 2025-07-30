@@ -1,5 +1,6 @@
 ﻿using LMS.Application.Abstractions.Messaging;
 using LMS.Domain.Abstractions;
+using LMS.Domain.Shared.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,5 @@ namespace LMS.Application.Features.LessonContents.UpdateVideoContent
 {
     public sealed record UpdateVideoContentCommand(
     Guid ContentId,
-    string VideoUrl) : ICommand<Result>;
+    string VideoUrl, Title title) : ICommand<Result>;
 }

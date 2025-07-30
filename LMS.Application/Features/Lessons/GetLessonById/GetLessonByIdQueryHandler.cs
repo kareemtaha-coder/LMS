@@ -49,31 +49,33 @@ namespace LMS.Application.Features.Lessons.GetLessonById
             }
 
 
-            // Step 3: Map to the response DTO.
             var contentResponses = lesson.Contents
-                .OrderBy(c => c.SortOrder.Value)
-                .Select(content =>
-                {
-                    LessonContentResponse response = content switch
-                    {
-                        RichTextContent rtc => new RichTextContentResponse(rtc.Id, rtc.SortOrder.Value, rtc.ArabicText, rtc.EnglishText),
-                        VideoContent vc => new VideoContentResponse(vc.Id, vc.SortOrder.Value, vc.VideoUrl),
-                        ImageWithCaptionContent iwc => new ImageWithCaptionContentResponse(iwc.Id, iwc.SortOrder.Value, iwc.ImageUrl, iwc.Caption),
-                        ExamplesGridContent egc => new ExamplesGridContentResponse(
-                            egc.Id,
-                            egc.SortOrder.Value,
-                            egc.ExampleItems.Select(ei => new ExampleItemResponse(ei.Id, ei.ImageUrl, ei.AudioUrl)).ToList()
-                        ),
-                        _ => throw new InvalidOperationException("Unknown content type")
-                    };
-                    return response;
-                })
-                .ToList();
+                      .OrderBy(c => c.SortOrder.Value)
+                      .Select(content =>
+                      {
+                          // --- التغيير الرئيسي هنا: استخدام Title.Value بدلاً من Title ---
+                          LessonContentResponse response = content switch
+                          {
+                              RichTextContent rtc => new RichTextContentResponse(rtc.Id, rtc.Title.Value, rtc.SortOrder.Value, rtc.ArabicText, rtc.EnglishText, rtc.NoteType),
+                              VideoContent vc => new VideoContentResponse(vc.Id, vc.Title.Value, vc.SortOrder.Value, vc.VideoUrl),
+                              ImageWithCaptionContent iwc => new ImageWithCaptionContentResponse(iwc.Id, iwc.Title.Value, iwc.SortOrder.Value, iwc.ImageUrl, iwc.Caption),
+                              ExamplesGridContent egc => new ExamplesGridContentResponse(
+                                  egc.Id,
+                                  egc.Title.Value,
+                                  egc.SortOrder.Value,
+                                  egc.ExampleItems.Select(ei => new ExampleItemResponse(ei.Id, ei.ImageUrl, ei.AudioUrl)).ToList()
+                              ),
+                              _ => throw new InvalidOperationException("Unknown content type")
+                          };
+                          return response;
+                      })
+                      .ToList();
 
             var lessonResponse = new LessonResponse(
                 lesson.Id,
                 lesson.Title.Value,
                 lesson.SortOrder.Value,
+                lesson.Status,
                 contentResponses);
 
             return lessonResponse;

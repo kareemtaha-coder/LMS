@@ -1,5 +1,6 @@
 ﻿using LMS.Application.Abstractions.Messaging;
 using LMS.Domain.Abstractions;
+using LMS.Domain.Shared.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,6 @@ namespace LMS.Application.Features.LessonContents.AddExamplesGrid
 {
     public sealed record AddExamplesGridCommand(
      Guid LessonId,
+     string Title,
      int SortOrder) : ICommand<Result<Guid>>;
 }

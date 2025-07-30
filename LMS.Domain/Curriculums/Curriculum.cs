@@ -94,7 +94,7 @@ namespace LMS.Domain.Curriculums
             return chapter.AddLesson(lessonTitle, lessonSortOrder);
         }
 
-        public Result AddRichTextContentToLesson(Guid lessonId, SortOrder contentSortOrder, string? arabicText, string? englishText, NoteType noteType)
+        public Result AddRichTextContentToLesson(Guid lessonId, SortOrder contentSortOrder, Title title, string? arabicText, string? englishText, NoteType noteType)
         {
             // Find the lesson anywhere within this curriculum.
             var lesson = FindLesson(lessonId);
@@ -104,7 +104,7 @@ namespace LMS.Domain.Curriculums
             }
 
             // Delegate the final action to the Lesson entity.
-            return lesson.AddRichTextContent(contentSortOrder, arabicText, englishText, noteType);
+            return lesson.AddRichTextContent(contentSortOrder, arabicText, englishText, noteType, title);
         }
 
         // You can refactor other "AddToLesson" methods to use this helper too.
@@ -115,7 +115,7 @@ namespace LMS.Domain.Curriculums
                 .FirstOrDefault(l => l.Id == lessonId);
         }
 
-        public Result AddVideoContentToLesson(Guid lessonId, SortOrder contentSortOrder, string videoUrl)
+        public Result AddVideoContentToLesson(Guid lessonId, SortOrder contentSortOrder, string videoUrl, Title title)
         {
             // Use the existing helper to find the lesson
             var lesson = FindLesson(lessonId);
@@ -125,9 +125,9 @@ namespace LMS.Domain.Curriculums
             }
 
             // Delegate the final action to the Lesson entity
-            return lesson.AddVideoContent(contentSortOrder, videoUrl);
+            return lesson.AddVideoContent(contentSortOrder, videoUrl,title);
         }
-        public Result AddImageWithCaptionContentToLesson(Guid lessonId, SortOrder contentSortOrder, string imageUrl, string? caption)
+        public Result AddImageWithCaptionContentToLesson(Guid lessonId, SortOrder contentSortOrder, string imageUrl, string? caption,Title title)
         {
             var lesson = FindLesson(lessonId);
             if (lesson is null)
@@ -135,10 +135,10 @@ namespace LMS.Domain.Curriculums
                 return Result.Failure(CurriculumErrors.LessonNotFound);
             }
 
-            return lesson.AddImageWithCaptionContent(contentSortOrder, imageUrl, caption);
+            return lesson.AddImageWithCaptionContent(contentSortOrder, imageUrl, caption, title);
         }
 
-         public Result AddExamplesGridToLesson(Guid lessonId, SortOrder contentSortOrder)
+         public Result AddExamplesGridToLesson(Guid lessonId, SortOrder contentSortOrder, Title title)
     {
         var lesson = FindLesson(lessonId);
         if (lesson is null)
@@ -146,7 +146,7 @@ namespace LMS.Domain.Curriculums
             return Result.Failure(CurriculumErrors.LessonNotFound);
         }
 
-        return lesson.AddExamplesGridContent(contentSortOrder);
+        return lesson.AddExamplesGridContent(contentSortOrder,title);
     }
 
         public Result AddItemToExamplesGridInLesson(Guid contentId, string imageUrl, string? audioUrl)

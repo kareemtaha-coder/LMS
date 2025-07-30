@@ -1,5 +1,6 @@
 ﻿using LMS.Application.Abstractions.Messaging;
 using LMS.Domain.Abstractions;
+using LMS.Domain.Shared.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,7 @@ namespace LMS.Application.Features.LessonContents.AddVideoContent
 {
     public sealed record AddVideoContentCommand(
     Guid LessonId,
+    string Title,
     int SortOrder,
     string VideoUrl) : ICommand<Result<Guid>>;
 }

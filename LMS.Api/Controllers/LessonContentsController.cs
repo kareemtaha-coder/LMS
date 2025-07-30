@@ -36,11 +36,12 @@ namespace LMS.Api.Controllers
             CancellationToken cancellationToken)
         {
             var command = new AddRichTextContentCommand(
-                lessonId,
-                request.SortOrder,
-                request.ArabicText,
-                request.EnglishText,
-                request.NoteType);
+               lessonId,
+               request.Title!, 
+               request.SortOrder,
+               request.ArabicText,
+               request.EnglishText,
+               request.NoteType);
 
             var result = await Sender.Send(command, cancellationToken);
 
@@ -52,30 +53,31 @@ namespace LMS.Api.Controllers
             return Ok(result.Value);
         }
 
+        [HttpPost("video")]
+        [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> AddVideoContent(
+            Guid lessonId,
+            [FromBody] AddVideoContentRequest request,
+            CancellationToken cancellationToken)
+        {
+            // الترتيب الصحيح للمعاملات مع تصحيح اسم الخاصية
+            var command = new AddVideoContentCommand(
+                lessonId,
+                request.title,
+                request.SortOrder,
+                request.VideoUrl
+                );
 
-            [HttpPost("video")]
-            [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
-            [ProducesResponseType(StatusCodes.Status400BadRequest)]
-            public async Task<IActionResult> AddVideoContent(
-                Guid lessonId,
-                [FromBody] AddVideoContentRequest request,
-                CancellationToken cancellationToken)
+            var result = await Sender.Send(command, cancellationToken);
+
+            if (result.IsFailure)
             {
-                var command = new AddVideoContentCommand(
-                    lessonId,
-                    request.SortOrder,
-                    request.VideoUrl);
-
-                var result = await Sender.Send(command, cancellationToken);
-
-                if (result.IsFailure)
-                {
-                    return HandleFailure(result);
-                }
-
-                return Ok(result.Value);
+                return HandleFailure(result);
             }
 
+            return Ok(result.Value);
+        }
 
         [HttpPost("image-with-caption")]
         [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
@@ -111,10 +113,11 @@ namespace LMS.Api.Controllers
 
             // 4. Create the command with the URL and send it to the handler
             var command = new AddImageWithCaptionCommand(
-                lessonId,
-                request.SortOrder,
-                imageUrl,
-                request.Caption);
+                        lessonId,
+                        request.Title, 
+                        request.SortOrder,
+                        imageUrl,
+                        request.Caption);
 
             var result = await Sender.Send(command, cancellationToken);
 
@@ -141,6 +144,7 @@ namespace LMS.Api.Controllers
         {
             var command = new AddExamplesGridCommand(
                 lessonId,
+                request.Title,
                 request.SortOrder);
 
             var result = await Sender.Send(command, cancellationToken);
@@ -183,7 +187,7 @@ namespace LMS.Api.Controllers
             var command = new UpdateRichTextContentCommand(
                 contentId,
                 request.ArabicText,
-                request.EnglishText, request.NoteType);
+                request.EnglishText, request.NoteType, request.title);
 
             var result = await Sender.Send(command, cancellationToken);
 
@@ -204,7 +208,7 @@ namespace LMS.Api.Controllers
         {
             var command = new UpdateVideoContentCommand(
                 contentId,
-                request.VideoUrl);
+                request.VideoUrl, request.title);
 
             var result = await Sender.Send(command, cancellationToken);
 
@@ -227,7 +231,7 @@ namespace LMS.Api.Controllers
                 newImageUrl = await _fileService.SaveFileAsync(request.ImageFile, "images/lessons", cancellationToken);
             }
 
-            var command = new UpdateImageWithCaptionCommand(contentId, newImageUrl, request.Caption);
+            var command = new UpdateImageWithCaptionCommand(contentId, newImageUrl, request.Caption ,request.title);
             var result = await Sender.Send(command, cancellationToken);
 
             if (result.IsFailure)

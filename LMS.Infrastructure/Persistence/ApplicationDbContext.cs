@@ -50,6 +50,8 @@ namespace LMS.Infrastructure.Persistence
             builder.Entity<Lesson>().OwnsOne(l => l.Title);
             builder.Entity<Lesson>().OwnsOne(l => l.SortOrder);
             builder.Entity<LessonContent>().OwnsOne(lc => lc.SortOrder);
+            builder.Entity<LessonContent>().OwnsOne(lc => lc.Title);
+
 
 
             // --- إعداد وراثة Table-Per-Hierarchy (TPH) ---

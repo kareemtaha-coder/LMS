@@ -1,4 +1,5 @@
 ﻿using LMS.Domain.Lessons;
+using LMS.Domain.Shared.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,5 +8,10 @@ using System.Threading.Tasks;
 
 namespace LMS.Application.Features.LessonContents.AddRichTextContent
 {
-    public sealed record AddRichTextContentRequest(int SortOrder, string? ArabicText, string? EnglishText, NoteType NoteType);
+    public sealed record AddRichTextContentRequest(
+        string? Title,
+        int SortOrder,
+        string? ArabicText,
+        string? EnglishText,
+        NoteType NoteType);
 }

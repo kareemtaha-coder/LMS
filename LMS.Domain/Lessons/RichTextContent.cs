@@ -15,22 +15,22 @@ namespace LMS.Domain.Lessons
         public NoteType NoteType { get; private set; }
 
 
-        private RichTextContent(Guid id, Guid lessonId, SortOrder sortOrder, string? arabicText, string? englishText, NoteType noteType)
-            : base(id, lessonId, sortOrder)
+        private RichTextContent(Guid id, Guid lessonId, SortOrder sortOrder, string? arabicText, string? englishText, NoteType noteType,Title title)
+            : base(id, lessonId, sortOrder,title)
         {
             ArabicText = arabicText;
             EnglishText = englishText;
             NoteType = noteType;
         }
 
-        internal static Result<RichTextContent> Create(Guid lessonId, SortOrder sortOrder, string? arabicText, string? englishText, NoteType noteType)
+        internal static Result<RichTextContent> Create(Guid lessonId, SortOrder sortOrder, string? arabicText, string? englishText, NoteType noteType,Title title)
         {
             if (string.IsNullOrWhiteSpace(arabicText) && string.IsNullOrWhiteSpace(englishText))
             {
                 return Result.Failure<RichTextContent>(LessonErrors.EmptyText);
             }
 
-            var content = new RichTextContent(Guid.NewGuid(), lessonId, sortOrder, arabicText, englishText, noteType);
+            var content = new RichTextContent(Guid.NewGuid(), lessonId, sortOrder, arabicText, englishText, noteType, title);
             return content;
         }
 

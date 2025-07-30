@@ -29,16 +29,25 @@ namespace LMS.Application.Features.LessonContents.AddRichTextContent
                 return Result.Failure<Guid>(new Error("Lesson.NotFound", "The specified lesson could not be found."));
             }
 
+           
+            Title? title = null;
+            if (!string.IsNullOrEmpty(request.Title))
+            {
+                var titleResult = Title.Create(request.Title);
+                if (titleResult.IsFailure) return Result.Failure<Guid>(titleResult.Error);
+                title = titleResult.Value;
+            }
+
             var sortOrderResult = SortOrder.Create(request.SortOrder);
             if (sortOrderResult.IsFailure) return Result.Failure<Guid>(sortOrderResult.Error);
 
-            // Pass the NoteType from the request to the domain method
             var addContentResult = curriculum.AddRichTextContentToLesson(
-                request.LessonId,
-                sortOrderResult.Value,
-                request.ArabicText,
-                request.EnglishText,
-                request.NoteType); // The missing parameter is now added
+           request.LessonId,
+           sortOrderResult.Value,
+           title, // <-- تمرير الكائن هنا
+           request.ArabicText,
+           request.EnglishText,
+           request.NoteType);
 
             if (addContentResult.IsFailure)
             {

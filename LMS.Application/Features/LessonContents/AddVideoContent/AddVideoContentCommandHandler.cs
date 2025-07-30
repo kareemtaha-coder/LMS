@@ -29,13 +29,22 @@ namespace LMS.Application.Features.LessonContents.AddVideoContent
                 return Result.Failure<Guid>(new Error("Lesson.NotFound", "The specified lesson could not be found."));
             }
 
+            Title title = null;
+            if (!string.IsNullOrEmpty(request.Title))
+            {
+                var titleResult = Title.Create(request.Title);
+                if (titleResult.IsFailure) return Result.Failure<Guid>(titleResult.Error);
+                title = titleResult.Value;
+            }
+
             var sortOrderResult = SortOrder.Create(request.SortOrder);
             if (sortOrderResult.IsFailure) return Result.Failure<Guid>(sortOrderResult.Error);
 
             var addContentResult = curriculum.AddVideoContentToLesson(
                 request.LessonId,
                 sortOrderResult.Value,
-                request.VideoUrl);
+                request.VideoUrl,
+                title);
 
             if (addContentResult.IsFailure)
             {

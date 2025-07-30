@@ -1,6 +1,7 @@
 ﻿using LMS.Application.Abstractions.Messaging;
 using LMS.Domain.Abstractions;
 using LMS.Domain.Lessons;
+using LMS.Domain.Shared.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,5 +14,5 @@ namespace LMS.Application.Features.LessonContents.UpdateRichTextContent
     Guid ContentId,
     string? ArabicText,
     string? EnglishText,
-    NoteType NoteType) : ICommand<Result>;
+    NoteType NoteType, Title title) : ICommand<Result>;
 }

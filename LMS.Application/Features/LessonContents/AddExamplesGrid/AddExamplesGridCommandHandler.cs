@@ -32,9 +32,18 @@ namespace LMS.Application.Features.LessonContents.AddExamplesGrid
             var sortOrderResult = SortOrder.Create(request.SortOrder);
             if (sortOrderResult.IsFailure) return Result.Failure<Guid>(sortOrderResult.Error);
 
+            Title? title = null;
+            if (!string.IsNullOrEmpty(request.Title))
+            {
+                var titleResult = Title.Create(request.Title);
+                if (titleResult.IsFailure) return Result.Failure<Guid>(titleResult.Error);
+                title = titleResult.Value;
+            }
+
             var addContentResult = curriculum.AddExamplesGridToLesson(
                 request.LessonId,
-                sortOrderResult.Value);
+                sortOrderResult.Value,
+                title!);
 
             if (addContentResult.IsFailure)
             {
@@ -43,9 +52,9 @@ namespace LMS.Application.Features.LessonContents.AddExamplesGrid
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+            // ... find and return newContent.Id ...
             var lesson = curriculum.Chapters.SelectMany(c => c.Lessons).First(l => l.Id == request.LessonId);
             var newContent = lesson.Contents.First(lc => lc.SortOrder.Value == request.SortOrder);
-
             return newContent.Id;
         }
     }

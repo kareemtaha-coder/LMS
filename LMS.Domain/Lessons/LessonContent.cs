@@ -12,12 +12,14 @@ namespace LMS.Domain.Lessons
     {
         public Guid LessonId { get; protected set; }
         public SortOrder SortOrder { get; protected set; }
+        public Title Title { get; protected set; }
 
-        protected LessonContent(Guid id, Guid lessonId, SortOrder sortOrder)
+        protected LessonContent(Guid id, Guid lessonId, SortOrder sortOrder, Title title)
             : base(id)
         {
             LessonId = lessonId;
             SortOrder = sortOrder;
+            Title = title;
         }
 
         protected LessonContent() { }
