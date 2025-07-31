@@ -11,5 +11,5 @@ namespace LMS.Application.Features.LessonContents.UpdateVideoContent
 {
     public sealed record UpdateVideoContentCommand(
     Guid ContentId,
-    string VideoUrl, Title title) : ICommand<Result>;
+    string VideoUrl, string Title) : ICommand<Result>;
 }

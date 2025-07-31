@@ -14,5 +14,5 @@ namespace LMS.Application.Features.LessonContents.UpdateRichTextContent
     Guid ContentId,
     string? ArabicText,
     string? EnglishText,
-    NoteType NoteType, Title title) : ICommand<Result>;
+    NoteType NoteType, string Title) : ICommand<Result>;
 }

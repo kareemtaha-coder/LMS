@@ -2,6 +2,7 @@
 using LMS.Domain.Abstractions;
 using LMS.Domain.Curriculums;
 using LMS.Domain.Lessons;
+using LMS.Domain.Shared.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,13 +29,21 @@ namespace LMS.Application.Features.LessonContents.UpdateRichTextContent
             {
                 return Result.Failure(LessonErrors.ContentNotFound);
             }
+            Title title = null;
+            if (!string.IsNullOrEmpty(request.Title))
+            {
+                var titleResult = Title.Create(request.Title);
+                if (titleResult.IsFailure) return titleResult;
+                title = titleResult.Value;
+            }
 
             // Pass the NoteType from the request to the domain method
             var result = curriculum.UpdateRichTextContent(
                 request.ContentId,
                 request.ArabicText,
                 request.EnglishText,
-                request.NoteType);
+                request.NoteType,
+                title);
 
             if (result.IsFailure)
             {

@@ -3,6 +3,7 @@ using LMS.Application.Abstractions.Services;
 using LMS.Domain.Abstractions;
 using LMS.Domain.Curriculums;
 using LMS.Domain.Lessons;
+using LMS.Domain.Shared.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,6 +33,15 @@ namespace LMS.Application.Features.LessonContents.UpdateImageWithCaption
             var curriculum = await _curriculumRepository.GetByContentIdAsync(request.ContentId, cancellationToken);
             if (curriculum is null) return Result.Failure(LessonErrors.ContentNotFound);
 
+            Title title = null;
+            if (!string.IsNullOrEmpty(request.Title))
+            {
+                var titleResult = Title.Create(request.Title);
+                if (titleResult.IsFailure) return titleResult;
+                title = titleResult.Value;
+            }
+
+
             var content = curriculum.Chapters
                 .SelectMany(c => c.Lessons)
                 .SelectMany(l => l.Contents)
@@ -45,7 +55,7 @@ namespace LMS.Application.Features.LessonContents.UpdateImageWithCaption
             string oldImageUrl = imageContent.ImageUrl;
             string finalImageUrl = request.NewImageUrl ?? oldImageUrl;
 
-            var result = curriculum.UpdateImageWithCaptionContent(request.ContentId, finalImageUrl, request.Caption);
+            var result = curriculum.UpdateImageWithCaptionContent(request.ContentId, finalImageUrl, request.Caption,title);
             if (result.IsFailure) return result;
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);

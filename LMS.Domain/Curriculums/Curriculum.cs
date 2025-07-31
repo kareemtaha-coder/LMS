@@ -174,7 +174,7 @@ namespace LMS.Domain.Curriculums
             return lesson.ReorderContents(orderedContentIds);
         }
 
-        public Result UpdateRichTextContent(Guid contentId, string? newArabicText, string? newEnglishText, NoteType noteType)
+        public Result UpdateRichTextContent(Guid contentId, string? newArabicText, string? newEnglishText, NoteType noteType, Title newTitle)
         {
             var content = _chapters
                 .SelectMany(c => c.Lessons)
@@ -192,10 +192,10 @@ namespace LMS.Domain.Curriculums
             }
 
             // Pass the new noteType parameter to the Update method
-            return richTextContent.Update(newArabicText, newEnglishText, noteType);
+            return richTextContent.Update(newArabicText, newEnglishText, noteType, newTitle);
         }
 
-        public Result UpdateVideoContent(Guid contentId, string newVideoUrl)
+        public Result UpdateVideoContent(Guid contentId, string newVideoUrl, Title newTitle)
         {
             var content = _chapters
                 .SelectMany(c => c.Lessons)
@@ -212,10 +212,10 @@ namespace LMS.Domain.Curriculums
                 return Result.Failure(LessonErrors.InvalidContentType);
             }
 
-            return videoContent.Update(newVideoUrl);
+            return videoContent.Update(newVideoUrl,newTitle);
         }
 
-        public Result UpdateImageWithCaptionContent(Guid contentId, string newImageUrl, string? newCaption)
+        public Result UpdateImageWithCaptionContent(Guid contentId, string newImageUrl, string? newCaption, Title newTitle)
         {
             var content = _chapters
                 .SelectMany(c => c.Lessons)
@@ -232,7 +232,7 @@ namespace LMS.Domain.Curriculums
                 return Result.Failure(LessonErrors.InvalidContentType);
             }
 
-            return imageContent.Update(newImageUrl, newCaption);
+            return imageContent.Update(newImageUrl, newCaption,newTitle);
         }
         public Result<ExampleItem> DeleteExampleItem(Guid itemId)
         {
@@ -304,6 +304,24 @@ namespace LMS.Domain.Curriculums
             var lesson = FindLesson(lessonId);
             if (lesson is null) return Result.Failure(CurriculumErrors.LessonNotFound);
             return lesson.Unpublish();
+        }
+
+        public Result UpdateLessonTitle(Guid lessonId, Title newTitle)
+        {
+            var chapter = _chapters.FirstOrDefault(c => c.Lessons.Any(l => l.Id == lessonId));
+            if (chapter is null)
+            {
+                return Result.Failure(CurriculumErrors.LessonNotFound);
+            }
+
+            // Check for duplicate lesson titles within the same chapter
+            if (chapter.Lessons.Any(l => l.Title.Value == newTitle.Value && l.Id != lessonId))
+            {
+                return Result.Failure(CurriculumErrors.DuplicateLessonTitle);
+            }
+
+            var lessonToUpdate = chapter.Lessons.First(l => l.Id == lessonId);
+            return lessonToUpdate.UpdateTitle(newTitle);
         }
     }
 

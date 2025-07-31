@@ -2,6 +2,7 @@
 using LMS.Domain.Abstractions;
 using LMS.Domain.Curriculums;
 using LMS.Domain.Lessons;
+using LMS.Domain.Shared.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +30,15 @@ namespace LMS.Application.Features.LessonContents.UpdateVideoContent
                 return Result.Failure(LessonErrors.ContentNotFound);
             }
 
-            var result = curriculum.UpdateVideoContent(request.ContentId, request.VideoUrl);
+            Title title = null;
+            if (!string.IsNullOrEmpty(request.Title))
+            {
+                var titleResult = Title.Create(request.Title);
+                if (titleResult.IsFailure) return titleResult;
+                title = titleResult.Value;
+            }
+
+            var result = curriculum.UpdateVideoContent(request.ContentId, request.VideoUrl, title);
 
             if (result.IsFailure)
             {

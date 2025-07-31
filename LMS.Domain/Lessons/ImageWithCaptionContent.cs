@@ -32,13 +32,13 @@ namespace LMS.Domain.Lessons
             return content;
         }
 
-        internal Result Update(string newImageUrl, string? newCaption)
+        internal Result Update(string newImageUrl, string? newCaption, Title newTitle)
         {
             if (string.IsNullOrWhiteSpace(newImageUrl))
             {
                 return Result.Failure(LessonErrors.EmptyUrl(nameof(ImageWithCaptionContent)));
             }
-
+            Title = newTitle;
             ImageUrl = newImageUrl;
             Caption = newCaption;
             return Result.Success();

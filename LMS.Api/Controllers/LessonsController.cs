@@ -2,6 +2,7 @@
 using LMS.Application.Features.Lessons.GetLessonById;
 using LMS.Application.Features.Lessons.PublishLesson;
 using LMS.Application.Features.Lessons.UnpublishLesson;
+using LMS.Application.Features.Lessons.UpdateLessonTitle;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -76,6 +77,26 @@ namespace LMS.Api.Controllers
             var command = new UnpublishLessonCommand(lessonId);
             var result = await Sender.Send(command, cancellationToken);
             if (result.IsFailure) return HandleFailure(result);
+            return NoContent();
+        }
+
+
+        [HttpPut("{lessonId:guid}/title")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdateLessonTitle(
+            Guid lessonId,
+            [FromBody] UpdateLessonTitleRequest request,
+            CancellationToken cancellationToken)
+        {
+            var command = new UpdateLessonTitleCommand(lessonId, request.Title);
+            var result = await Sender.Send(command, cancellationToken);
+
+            if (result.IsFailure)
+            {
+                return HandleFailure(result);
+            }
+
             return NoContent();
         }
     }

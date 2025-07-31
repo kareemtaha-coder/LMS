@@ -8,5 +8,5 @@ using System.Threading.Tasks;
 
 namespace LMS.Application.Features.LessonContents.UpdateRichTextContent
 {
-    public sealed record UpdateRichTextContentRequest(string? ArabicText, string? EnglishText, NoteType NoteType, Title title);
+    public sealed record UpdateRichTextContentRequest(string? ArabicText, string? EnglishText, NoteType NoteType, string Title);
 }

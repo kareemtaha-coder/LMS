@@ -33,7 +33,7 @@ namespace LMS.Domain.Lessons
             var content = new VideoContent(Guid.NewGuid(), lessonId, sortOrder, videoUrl, title);
             return content;
         }
-        internal Result Update(string newVideoUrl)
+        internal Result Update(string newVideoUrl, Title newTitle)
         {
             if (string.IsNullOrWhiteSpace(newVideoUrl))
             {
@@ -44,7 +44,7 @@ namespace LMS.Domain.Lessons
             {
                 return Result.Failure(LessonErrors.InvalidUrl(nameof(VideoContent)));
             }
-
+            Title = newTitle;
             VideoUrl = newVideoUrl;
             return Result.Success();
         }

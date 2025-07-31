@@ -35,13 +35,13 @@ namespace LMS.Domain.Lessons
         }
 
         // Update the Update method
-        internal Result Update(string? arabicText, string? englishText, NoteType noteType)
+        internal Result Update(string? arabicText, string? englishText, NoteType noteType,Title newTitle)
         {
             if (string.IsNullOrWhiteSpace(arabicText) && string.IsNullOrWhiteSpace(englishText))
             {
                 return Result.Failure<RichTextContent>(LessonErrors.EmptyText);
             }
-
+            Title = newTitle;
             ArabicText = arabicText;
             EnglishText = englishText;
             NoteType = noteType; // Update the property

@@ -54,6 +54,12 @@ namespace LMS.Domain.Lessons
             return Result.Success();
         }
 
+        internal Result UpdateTitle(Title newTitle)
+        {
+            Title = newTitle;
+            return Result.Success();
+        }
+
         private Lesson() { } // For EF Core
 
         private Result CheckDuplicateSortOrder(SortOrder sortOrder)
@@ -152,5 +158,6 @@ namespace LMS.Domain.Lessons
 
             return grid.RemoveExampleItem(itemId);
         }
+
     }
 }

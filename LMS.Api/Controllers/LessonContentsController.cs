@@ -187,7 +187,7 @@ namespace LMS.Api.Controllers
             var command = new UpdateRichTextContentCommand(
                 contentId,
                 request.ArabicText,
-                request.EnglishText, request.NoteType, request.title);
+                request.EnglishText, request.NoteType, request.Title);
 
             var result = await Sender.Send(command, cancellationToken);
 
@@ -208,7 +208,7 @@ namespace LMS.Api.Controllers
         {
             var command = new UpdateVideoContentCommand(
                 contentId,
-                request.VideoUrl, request.title);
+                request.VideoUrl, request.Title);
 
             var result = await Sender.Send(command, cancellationToken);
 
@@ -231,7 +231,7 @@ namespace LMS.Api.Controllers
                 newImageUrl = await _fileService.SaveFileAsync(request.ImageFile, "images/lessons", cancellationToken);
             }
 
-            var command = new UpdateImageWithCaptionCommand(contentId, newImageUrl, request.Caption ,request.title);
+            var command = new UpdateImageWithCaptionCommand(contentId, newImageUrl, request.Caption ,request.Title);
             var result = await Sender.Send(command, cancellationToken);
 
             if (result.IsFailure)

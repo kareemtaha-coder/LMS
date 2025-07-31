@@ -7,5 +7,5 @@ using System.Threading.Tasks;
 
 namespace LMS.Application.Features.LessonContents.UpdateVideoContent
 {
-    public sealed record UpdateVideoContentRequest(string VideoUrl, Title title);
+    public sealed record UpdateVideoContentRequest(string VideoUrl, string Title);
 }

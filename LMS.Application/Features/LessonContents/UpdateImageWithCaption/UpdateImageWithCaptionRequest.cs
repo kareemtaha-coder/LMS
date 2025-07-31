@@ -8,5 +8,5 @@ using System.Threading.Tasks;
 
 namespace LMS.Application.Features.LessonContents.UpdateImageWithCaption
 {
-    public sealed record UpdateImageWithCaptionRequest(string? Caption, IFormFile? ImageFile, Title title);
+    public sealed record UpdateImageWithCaptionRequest(string? Caption, IFormFile? ImageFile, string Title);
 }
