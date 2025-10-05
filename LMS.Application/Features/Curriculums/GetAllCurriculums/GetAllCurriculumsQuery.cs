@@ -8,6 +8,5 @@ using System.Threading.Tasks;
 
 namespace LMS.Application.Features.Curriculums.GetAllCurriculums
 {
-    public sealed record GetAllCurriculumsQuery()
-    : IQuery<Result<IReadOnlyCollection<CurriculumSummaryResponse>>>;
+    public sealed record GetAllCurriculumsQuery() : IQuery<Result<IReadOnlyList<CurriculumSummaryResponse>>>;
 }

@@ -35,7 +35,7 @@ namespace LMS.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CurriculumId");
 
-                    b.ToTable("Chapters");
+                    b.ToTable("Chapter");
                 });
 
             modelBuilder.Entity("LMS.Domain.Curriculums.Curriculum", b =>
@@ -69,7 +69,7 @@ namespace LMS.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ExamplesGridContentId");
 
-                    b.ToTable("ExampleItems");
+                    b.ToTable("ExampleItem");
                 });
 
             modelBuilder.Entity("LMS.Domain.Lessons.Lesson", b =>
@@ -81,11 +81,14 @@ namespace LMS.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ChapterId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ChapterId");
 
-                    b.ToTable("Lessons");
+                    b.ToTable("Lesson");
                 });
 
             modelBuilder.Entity("LMS.Domain.Lessons.LessonContent", b =>
@@ -356,6 +359,9 @@ namespace LMS.Infrastructure.Persistence.Migrations
                     b.Property<string>("EnglishText")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("NoteType")
+                        .HasColumnType("int");
+
                     b.HasDiscriminator().HasValue("RichText");
                 });
 
@@ -388,7 +394,7 @@ namespace LMS.Infrastructure.Persistence.Migrations
 
                             b1.HasKey("ChapterId");
 
-                            b1.ToTable("Chapters");
+                            b1.ToTable("Chapter");
 
                             b1.WithOwner()
                                 .HasForeignKey("ChapterId");
@@ -405,7 +411,7 @@ namespace LMS.Infrastructure.Persistence.Migrations
 
                             b1.HasKey("ChapterId");
 
-                            b1.ToTable("Chapters");
+                            b1.ToTable("Chapter");
 
                             b1.WithOwner()
                                 .HasForeignKey("ChapterId");
@@ -488,7 +494,7 @@ namespace LMS.Infrastructure.Persistence.Migrations
 
                             b1.HasKey("LessonId");
 
-                            b1.ToTable("Lessons");
+                            b1.ToTable("Lesson");
 
                             b1.WithOwner()
                                 .HasForeignKey("LessonId");
@@ -505,7 +511,7 @@ namespace LMS.Infrastructure.Persistence.Migrations
 
                             b1.HasKey("LessonId");
 
-                            b1.ToTable("Lessons");
+                            b1.ToTable("Lesson");
 
                             b1.WithOwner()
                                 .HasForeignKey("LessonId");
@@ -542,7 +548,27 @@ namespace LMS.Infrastructure.Persistence.Migrations
                                 .HasForeignKey("LessonContentId");
                         });
 
+                    b.OwnsOne("LMS.Domain.Shared.ValueObjects.Title", "Title", b1 =>
+                        {
+                            b1.Property<Guid>("LessonContentId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.HasKey("LessonContentId");
+
+                            b1.ToTable("LessonContents");
+
+                            b1.WithOwner()
+                                .HasForeignKey("LessonContentId");
+                        });
+
                     b.Navigation("SortOrder")
+                        .IsRequired();
+
+                    b.Navigation("Title")
                         .IsRequired();
                 });
 

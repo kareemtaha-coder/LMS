@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LMS.Domain.Abstractions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,15 +9,25 @@ namespace LMS.Domain.Shared.ValueObjects
 {
     public record SortOrder
     {
-        public int Value{ get; init; }
-        public SortOrder(int value)
+        public int Value { get; init; }
+
+        // اجعله خاصاً
+        private SortOrder(int value)
+        {
+            Value = value;
+        }
+
+        // أضف Factory Method
+        public static Result<SortOrder> Create(int value)
         {
             if (value <= 0)
             {
-                throw new ArgumentException("Sort order must be a positive number.", nameof(value));
+                return Result.Failure<SortOrder>(new Error(
+                    "SortOrder.NotPositive",
+                    "Sort order must be a positive number."));
             }
-            Value = value;
-
+            return new SortOrder(value);
         }
-    }
+    
+}
 }

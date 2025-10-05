@@ -1,4 +1,5 @@
 ﻿using LMS.Application.Features.Curriculums.AddChapter;
+using LMS.Application.Features.Curriculums.Chapters.GetChapters;
 using LMS.Domain.Curriculums;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -6,50 +7,61 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LMS.Api.Controllers
 {
-    [ApiController]
-    // نضع الجزء المشترك من العنوان على مستوى الكلاس لتوحيد كل الـ actions القادمة
     [Route("api/curriculums/{curriculumId:guid}/chapters")]
-    public class CurriculumChaptersController : ControllerBase
+    public sealed class CurriculumChaptersController : ApiControllerBase
     {
-        private readonly ISender _sender;
-
-        public CurriculumChaptersController(ISender sender)
+        public CurriculumChaptersController(ISender sender) : base(sender)
         {
-            _sender = sender;
         }
 
-        /// <summary>
-        /// Creates a new chapter within a specified curriculum.
-        /// </summary>
         [HttpPost]
+        [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> AddChapter(
-            [FromRoute] Guid curriculumId,
+            Guid curriculumId,
             [FromBody] AddChapterRequest request,
             CancellationToken cancellationToken)
         {
-            // 1. إنشاء الأمر من البيانات القادمة من الطلب
             var command = new AddChapterCommand(
                 curriculumId,
                 request.Title,
                 request.SortOrder);
 
-            // 2. إرسال الأمر إلى MediatR للمعالجة
-            var result = await _sender.Send(command, cancellationToken);
+            var result = await Sender.Send(command, cancellationToken);
 
-            // 3. التعامل مع نتيجة العملية
             if (result.IsFailure)
             {
-                // إذا كان الخطأ هو أن المنهج غير موجود، نرجع 404
-                if (result.Error == CurriculumErrors.NotFound)
-                {
-                    return NotFound(result.Error);
-                }
-                // لأي خطأ آخر (مثل عنوان مكرر أو خطأ تحقق)، نرجع 400
-                return BadRequest(result.Error);
+                return HandleFailure(result);
             }
 
-            // في حالة النجاح، نرجع 204 No Content، وهو مناسب للأوامر التي لا تعيد بيانات
-            return NoContent();
+            // For now, we return Ok. A fully RESTful API would return CreatedAtAction
+            // with a route to a "GetChapterById" endpoint.
+            return Ok(result.Value);
+        }
+
+
+
+
+        [HttpGet] // Route will be GET api/curriculums/{curriculumId}/chapters
+        public async Task<IActionResult> GetChapters(
+    [FromRoute] Guid curriculumId,
+    CancellationToken cancellationToken)
+        {
+            // 1. Create the query object from the route parameter.
+            var query = new GetChaptersQuery(curriculumId);
+
+            // 2. Send the query to MediatR.
+            var result = await Sender.Send(query, cancellationToken);
+
+            // 3. Handle the result.
+            if (result.IsFailure)
+            {
+                // This will handle the case where the curriculum itself is not found.
+                return NotFound(result.Error);
+            }
+
+            // On success, return 200 OK with the list of chapters.
+            return Ok(result.Value);
         }
     }
 }

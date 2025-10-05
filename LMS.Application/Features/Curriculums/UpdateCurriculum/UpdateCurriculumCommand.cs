@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace LMS.Application.Features.Curriculums.UpdateCurriculum
 {
     public sealed record UpdateCurriculumCommand(
-     Guid CurriculumId,
-     string Title,
-     string Introduction) : ICommand<Result>;
+      Guid CurriculumId,
+      string Title,
+      string Introduction) : ICommand<Result>;
 }

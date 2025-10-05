@@ -18,6 +18,9 @@ namespace LMS.Domain.Curriculums
         public static readonly Error DuplicateLessonTitle = new(
             "Curriculum.DuplicateLessonTitle",
             "A lesson with this title already exists in the specified chapter.");
+       public static readonly Error CurriculumNotFound = new(
+            "Curriculum.NotFound",
+            "The specified curriculum was not found."); 
 
         public static readonly Error ChapterNotFound = new(
             "Curriculum.ChapterNotFound",

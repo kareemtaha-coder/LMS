@@ -23,18 +23,40 @@ namespace LMS.Application.Features.Curriculums.CreateCurriculum
 
         public async Task<Result<Guid>> Handle(CreateCurriculumCommand request, CancellationToken cancellationToken)
         {
-            Result<Curriculum> curriculumResult = Curriculum.Create(request.Title, request.Introduction);
+            // 1. إنشاء الـ Value Objects أولاً للتحقق من صحتها
+            var titleResult = Title.Create(request.Title);
+            if (titleResult.IsFailure)
+            {
+                return Result.Failure<Guid>(titleResult.Error);
+            }
+
+            var introductionResult = Introduction.Create(request.Introduction);
+            if (introductionResult.IsFailure)
+            {
+                return Result.Failure<Guid>(introductionResult.Error);
+            }
+
+            // 2. استخدام الـ Factory Method في الـ Aggregate Root لإنشاء الكيان
+            // هذا يضمن تطبيق كل قواعد العمل (business rules) الخاصة بالـ Domain
+            var curriculumResult = Curriculum.Create(
+                request.Title,
+                request.Introduction);
 
             if (curriculumResult.IsFailure)
             {
                 return Result.Failure<Guid>(curriculumResult.Error);
             }
 
-            _curriculumRepository.Add(curriculumResult.Value);
+            var curriculum = curriculumResult.Value;
 
+            // 3. إضافة الكيان إلى الـ Repository
+            _curriculumRepository.Add(curriculum);
+
+            // 4. حفظ التغييرات في قاعدة البيانات
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return curriculumResult.Value.Id;
+            // 5. إعادة معرّف الكيان الجديد كدليل على النجاح
+            return curriculum.Id;
         }
     }
 }

@@ -23,4 +23,8 @@
     <ProjectReference Include="..\LMS.Infrastructure\LMS.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
 </Project>

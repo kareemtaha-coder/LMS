@@ -13,14 +13,14 @@ namespace LMS.Domain.Lessons
         private readonly List<ExampleItem> _exampleItems = new();
         public IReadOnlyCollection<ExampleItem> ExampleItems => _exampleItems.AsReadOnly();
 
-        private ExamplesGridContent(Guid id, Guid lessonId, SortOrder sortOrder)
-            : base(id, lessonId, sortOrder) { }
+        private ExamplesGridContent(Guid id, Guid lessonId, SortOrder sortOrder ,Title title)
+            : base(id, lessonId, sortOrder,title) { }
 
         private ExamplesGridContent() { } // For EF Core
 
-        internal static Result<ExamplesGridContent> Create(Guid lessonId, SortOrder sortOrder)
+        internal static Result<ExamplesGridContent> Create(Guid lessonId, SortOrder sortOrder, Title title)
         {
-            var content = new ExamplesGridContent(System.Guid.NewGuid(), lessonId, sortOrder);
+            var content = new ExamplesGridContent(System.Guid.NewGuid(), lessonId, sortOrder ,title);
             return content;
         }
 
@@ -47,6 +47,17 @@ namespace LMS.Domain.Lessons
             _exampleItems.Add(exampleItemResult.Value);
 
             return Result.Success();
+        }
+        internal Result<ExampleItem> RemoveExampleItem(Guid itemId)
+        {
+            var itemToRemove = _exampleItems.FirstOrDefault(i => i.Id == itemId);
+            if (itemToRemove is null)
+            {
+                return Result.Failure<ExampleItem>(new Error("ExampleItem.NotFound", "The specified item was not found in this grid."));
+            }
+
+            _exampleItems.Remove(itemToRemove);
+            return itemToRemove; // Return the removed item
         }
     }
 }

@@ -12,25 +12,43 @@ namespace LMS.Domain.Lessons
     {
         public string? ArabicText { get; private set; }
         public string? EnglishText { get; private set; }
+        public NoteType NoteType { get; private set; }
 
-        private RichTextContent(Guid id, Guid lessonId, SortOrder sortOrder, string? arabicText, string? englishText)
-            : base(id, lessonId, sortOrder)
+
+        private RichTextContent(Guid id, Guid lessonId, SortOrder sortOrder, string? arabicText, string? englishText, NoteType noteType,Title title)
+            : base(id, lessonId, sortOrder,title)
         {
             ArabicText = arabicText;
             EnglishText = englishText;
+            NoteType = noteType;
         }
 
-        internal static Result<RichTextContent> Create(Guid lessonId, SortOrder sortOrder, string? arabicText, string? englishText)
+        internal static Result<RichTextContent> Create(Guid lessonId, SortOrder sortOrder, string? arabicText, string? englishText, NoteType noteType,Title title)
         {
             if (string.IsNullOrWhiteSpace(arabicText) && string.IsNullOrWhiteSpace(englishText))
             {
                 return Result.Failure<RichTextContent>(LessonErrors.EmptyText);
             }
 
-            var content = new RichTextContent(Guid.NewGuid(), lessonId, sortOrder, arabicText, englishText);
+            var content = new RichTextContent(Guid.NewGuid(), lessonId, sortOrder, arabicText, englishText, noteType, title);
             return content;
         }
 
-        private RichTextContent() { } // For EF Core
+        // Update the Update method
+        internal Result Update(string? arabicText, string? englishText, NoteType noteType,Title newTitle)
+        {
+            if (string.IsNullOrWhiteSpace(arabicText) && string.IsNullOrWhiteSpace(englishText))
+            {
+                return Result.Failure<RichTextContent>(LessonErrors.EmptyText);
+            }
+            Title = newTitle;
+            ArabicText = arabicText;
+            EnglishText = englishText;
+            NoteType = noteType; // Update the property
+            return Result.Success();
+        }
+
+        // EF Core constructor
+        private RichTextContent() { }
     }
 }

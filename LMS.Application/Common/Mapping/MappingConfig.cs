@@ -17,7 +17,7 @@ namespace LMS.Application.Common.Mapping
         public void Register(TypeAdapterConfig config)
         {
             config.NewConfig<Curriculum, CurriculumSummaryResponse>()
-                .Map(dest => dest.Title, src => src.Title.Value);
+              .Map(dest => dest.Title, src => src.Title.Value);
 
             config.NewConfig<Curriculum, CurriculumResponse>()
              .Map(dest => dest.Title, src => src.Title.Value)

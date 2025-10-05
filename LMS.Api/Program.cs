@@ -15,7 +15,16 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddApplicationServices(); 
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:4200") // The address of your Angular app
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -25,7 +34,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseStaticFiles();
 app.UseHttpsRedirection();
+app.UseRouting(); // It's often implicitly called, but good to know the order
+
+app.UseCors("AllowSpecificOrigin");
 
 app.UseAuthorization();
 

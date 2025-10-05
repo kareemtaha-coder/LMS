@@ -13,60 +13,56 @@ using System.Threading.Tasks;
 
 namespace LMS.Application.Features.Curriculums.AddChapter
 {
-    public sealed class AddChapterCommandHandler : ICommandHandler<AddChapterCommand, Result>
+
+    internal sealed class AddChapterCommandHandler : ICommandHandler<AddChapterCommand, Result<Guid>>
     {
         private readonly ICurriculumRepository _curriculumRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<AddChapterCommandHandler> _logger;
 
-        public AddChapterCommandHandler(
-            ICurriculumRepository curriculumRepository,
-            IUnitOfWork unitOfWork,
-            ILogger<AddChapterCommandHandler> logger)
+        public AddChapterCommandHandler(ICurriculumRepository curriculumRepository, IUnitOfWork unitOfWork)
         {
             _curriculumRepository = curriculumRepository;
             _unitOfWork = unitOfWork;
-            _logger = logger;
         }
 
-        public async Task<Result> Handle(AddChapterCommand request, CancellationToken cancellationToken)
+        public async Task<Result<Guid>> Handle(AddChapterCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Starting to add a new chapter for CurriculumId: {CurriculumId}", request.CurriculumId);
-
-            // الخطوة 1: تحويل البيانات إلى كائنات قيمية
-            var titleResult = Title.Create(request.Title);
-            var sortOrderResult = SortOrder.Create(request.SortOrder);
-
-            // يمكنك إضافة التحقق من فشل إنشاء الكائنات القيمية هنا
-            if (titleResult.IsFailure) return Result.Failure(titleResult.Error);
-            if (sortOrderResult.IsFailure) return Result.Failure(sortOrderResult.Error);
-
-            // الخطوة 2: جلب الـ Aggregate Root
             var curriculum = await _curriculumRepository.GetByIdAsync(request.CurriculumId, cancellationToken);
-
             if (curriculum is null)
             {
-                _logger.LogWarning("Curriculum with Id {CurriculumId} was not found.", request.CurriculumId);
-                return Result.Failure(CurriculumErrors.NotFound);
+                return Result.Failure<Guid>(new Error("Curriculum.NotFound", "The specified curriculum was not found."));
             }
 
-            _logger.LogInformation("Found curriculum. Executing domain logic to add chapter...");
+            // Create Value Objects and check for failures
+            var titleResult = Title.Create(request.Title);
+            if (titleResult.IsFailure)
+            {
+                return Result.Failure<Guid>(titleResult.Error);
+            }
 
-            // الخطوة 3: تنفيذ منطق العمل الموجود داخل الـ Domain
+            // **This is the updated part**
+            var sortOrderResult = SortOrder.Create(request.SortOrder);
+            if (sortOrderResult.IsFailure)
+            {
+                return Result.Failure<Guid>(sortOrderResult.Error);
+            }
+
+            // Delegate to the domain entity using the created value objects
             var addChapterResult = curriculum.AddChapter(titleResult.Value, sortOrderResult.Value);
-
             if (addChapterResult.IsFailure)
             {
-                _logger.LogWarning("Failed to add chapter. Reason: {Error}", addChapterResult.Error);
-                return addChapterResult;
+                return Result.Failure<Guid>(addChapterResult.Error);
             }
 
-            // الخطوة 4: حفظ التغييرات
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Successfully added a new chapter for CurriculumId: {CurriculumId}", request.CurriculumId);
+            var newChapter = curriculum.Chapters.FirstOrDefault(c => c.Title == titleResult.Value);
+            if (newChapter is null)
+            {
+                return Result.Failure<Guid>(new Error("Chapter.NotFoundAfterCreation", "Could not find the chapter after creation."));
+            }
 
-            return Result.Success();
+            return newChapter.Id;
         }
     }
 }

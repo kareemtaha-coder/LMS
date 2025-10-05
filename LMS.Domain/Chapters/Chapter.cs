@@ -19,7 +19,7 @@ namespace LMS.Domain.Chapters
         public SortOrder SortOrder { get; private set; } = default!;
         public IReadOnlyCollection<Lesson> Lessons => _lessons.AsReadOnly();
 
-        private Chapter(Guid id, Title title, Guid curriculumId, SortOrder sortOrder) : base(id)
+        private Chapter( Title title, Guid curriculumId, SortOrder sortOrder) 
         {
             Title = title;
             CurriculumId = curriculumId;
@@ -39,7 +39,7 @@ namespace LMS.Domain.Chapters
                     "The curriculum ID is required to create a chapter."));
             }
 
-            var chapter = new Chapter(Guid.NewGuid(), title, curriculumId, sortOrder);
+            var chapter = new Chapter(title, curriculumId, sortOrder);
 
             // The 'Result' class has an implicit conversion, so this is the same as 'Result.Success(chapter)'
             return chapter;
@@ -59,6 +59,26 @@ namespace LMS.Domain.Chapters
             }
 
             _lessons.Add(lessonResult.Value);
+            return Result.Success();
+        }
+        internal Result<IReadOnlyList<LessonContent>> RemoveLesson(Guid lessonId)
+        {
+            var lessonToRemove = _lessons.FirstOrDefault(l => l.Id == lessonId);
+            if (lessonToRemove is null)
+            {
+                return Result.Failure<IReadOnlyList<LessonContent>>(CurriculumErrors.LessonNotFound);
+            }
+
+            var contentsToDelete = lessonToRemove.Contents.ToList();
+            _lessons.Remove(lessonToRemove);
+
+            return contentsToDelete;
+        }
+        internal Result UpdateTitle(Title newTitle)
+        {
+            // Add any specific validation for a chapter's title if needed.
+            // For now, the Title value object's own validation is sufficient.
+            Title = newTitle;
             return Result.Success();
         }
     }

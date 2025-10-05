@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace LMS.Application.Features.Curriculums.AddChapter
 {
     public sealed record AddChapterCommand(
-    Guid CurriculumId,
-    string Title,
-    int SortOrder) : ICommand<Result>;
+      Guid CurriculumId,
+      string Title,
+      int SortOrder) : ICommand<Result<Guid>>;
 }

@@ -35,6 +35,16 @@ namespace LMS.Domain.Curriculums
             return curriculum;
         }
 
+        public Result Update(Title newTitle, Introduction newIntroduction)
+        {
+            // The validation for Title and Introduction is handled by their respective
+            // 'Create' factory methods before this method is ever called.
+            Title = newTitle;
+            Introduction = newIntroduction;
+
+            return Result.Success();
+        }
+
         // ===================================================================================
         // <<< تحسين رقم 1: كل العمليات الآن تتم من خلال الـ Aggregate Root >>>
         // <<< تحسين رقم 2: كل العمليات الآن تعيد Result بدلاً من رمي Exception >>>
@@ -84,89 +94,234 @@ namespace LMS.Domain.Curriculums
             return chapter.AddLesson(lessonTitle, lessonSortOrder);
         }
 
-        public Result AddRichTextContentToLesson(Guid chapterId, Guid lessonId, SortOrder contentSortOrder, string? arabicText, string? englishText)
+        public Result AddRichTextContentToLesson(Guid lessonId, SortOrder contentSortOrder, Title title, string? arabicText, string? englishText, NoteType noteType)
         {
-            // البحث عن الفصل ثم الدرس
-            var chapter = _chapters.FirstOrDefault(c => c.Id == chapterId);
-            if (chapter is null) return Result.Failure(CurriculumErrors.ChapterNotFound);
-
-            var lesson = chapter.Lessons.FirstOrDefault(l => l.Id == lessonId);
-            if (lesson is null) return Result.Failure(CurriculumErrors.LessonNotFound);
-
-            // تفويض إضافة المحتوى للدرس
-            return lesson.AddRichTextContent(contentSortOrder, arabicText, englishText);
-        }
-
-        public Result AddVideoContentToLesson(Guid chapterId, Guid lessonId, SortOrder contentSortOrder, string videoUrl)
-        {
-            var chapter = _chapters.FirstOrDefault(c => c.Id == chapterId);
-            if (chapter is null)
+            // Find the lesson anywhere within this curriculum.
+            var lesson = FindLesson(lessonId);
+            if (lesson is null)
             {
-                return Result.Failure(CurriculumErrors.ChapterNotFound);
+                return Result.Failure(CurriculumErrors.LessonNotFound);
             }
 
-            var lesson = chapter.Lessons.FirstOrDefault(l => l.Id == lessonId);
+            // Delegate the final action to the Lesson entity.
+            return lesson.AddRichTextContent(contentSortOrder, arabicText, englishText, noteType, title);
+        }
+
+        // You can refactor other "AddToLesson" methods to use this helper too.
+        private Lesson? FindLesson(Guid lessonId)
+        {
+            return _chapters
+                .SelectMany(c => c.Lessons)
+                .FirstOrDefault(l => l.Id == lessonId);
+        }
+
+        public Result AddVideoContentToLesson(Guid lessonId, SortOrder contentSortOrder, string videoUrl, Title title)
+        {
+            // Use the existing helper to find the lesson
+            var lesson = FindLesson(lessonId);
             if (lesson is null)
             {
                 return Result.Failure(CurriculumErrors.LessonNotFound);
             }
 
             // Delegate the final action to the Lesson entity
-            return lesson.AddVideoContent(contentSortOrder, videoUrl);
+            return lesson.AddVideoContent(contentSortOrder, videoUrl,title);
         }
-
-        public Result AddImageWithCaptionContentToLesson(Guid chapterId, Guid lessonId, SortOrder contentSortOrder, string imageUrl, string? caption)
+        public Result AddImageWithCaptionContentToLesson(Guid lessonId, SortOrder contentSortOrder, string imageUrl, string? caption,Title title)
         {
-            var chapter = _chapters.FirstOrDefault(c => c.Id == chapterId);
-            if (chapter is null)
-            {
-                return Result.Failure(CurriculumErrors.ChapterNotFound);
-            }
-
-            var lesson = chapter.Lessons.FirstOrDefault(l => l.Id == lessonId);
+            var lesson = FindLesson(lessonId);
             if (lesson is null)
             {
                 return Result.Failure(CurriculumErrors.LessonNotFound);
             }
 
-            // Delegate the final action to the Lesson entity
-            return lesson.AddImageWithCaptionContent(contentSortOrder, imageUrl, caption);
+            return lesson.AddImageWithCaptionContent(contentSortOrder, imageUrl, caption, title);
         }
 
-        public Result AddExamplesGridToLesson(Guid chapterId, Guid lessonId, SortOrder contentSortOrder)
+         public Result AddExamplesGridToLesson(Guid lessonId, SortOrder contentSortOrder, Title title)
+    {
+        var lesson = FindLesson(lessonId);
+        if (lesson is null)
         {
-            var chapter = _chapters.FirstOrDefault(c => c.Id == chapterId);
-            if (chapter is null)
-            {
-                return Result.Failure(CurriculumErrors.ChapterNotFound);
-            }
-
-            var lesson = chapter.Lessons.FirstOrDefault(l => l.Id == lessonId);
-            if (lesson is null)
-            {
-                return Result.Failure(CurriculumErrors.LessonNotFound);
-            }
-
-            // Delegate the final action to the Lesson entity
-            return lesson.AddExamplesGridContent(contentSortOrder);
+            return Result.Failure(CurriculumErrors.LessonNotFound);
         }
 
-        public Result AddItemToExamplesGridInLesson(Guid chapterId, Guid lessonId, Guid contentId, string imageUrl, string? audioUrl)
-        {
-            var chapter = _chapters.FirstOrDefault(c => c.Id == chapterId);
-            if (chapter is null)
-            {
-                return Result.Failure(CurriculumErrors.ChapterNotFound);
-            }
+        return lesson.AddExamplesGridContent(contentSortOrder,title);
+    }
 
-            var lesson = chapter.Lessons.FirstOrDefault(l => l.Id == lessonId);
+        public Result AddItemToExamplesGridInLesson(Guid contentId, string imageUrl, string? audioUrl)
+        {
+            var lesson = _chapters
+                .SelectMany(c => c.Lessons)
+                .FirstOrDefault(l => l.Contents.Any(co => co.Id == contentId));
+
             if (lesson is null)
             {
-                return Result.Failure(CurriculumErrors.LessonNotFound);
+                return Result.Failure(LessonErrors.ContentNotFound);
             }
 
-            // Delegate the final, more complex action to the Lesson entity
             return lesson.AddItemToExamplesGrid(contentId, imageUrl, audioUrl);
+        }
+
+        public Result ReorderLessonContents(Guid lessonId, List<Guid> orderedContentIds)
+        {
+            var lesson = FindLesson(lessonId);
+            if (lesson is null)
+            {
+                return Result.Failure(CurriculumErrors.LessonNotFound);
+            }
+
+            return lesson.ReorderContents(orderedContentIds);
+        }
+
+        public Result UpdateRichTextContent(Guid contentId, string? newArabicText, string? newEnglishText, NoteType noteType, Title newTitle)
+        {
+            var content = _chapters
+                .SelectMany(c => c.Lessons)
+                .SelectMany(l => l.Contents)
+                .FirstOrDefault(co => co.Id == contentId);
+
+            if (content is null)
+            {
+                return Result.Failure(LessonErrors.ContentNotFound);
+            }
+
+            if (content is not RichTextContent richTextContent)
+            {
+                return Result.Failure(LessonErrors.InvalidContentType);
+            }
+
+            // Pass the new noteType parameter to the Update method
+            return richTextContent.Update(newArabicText, newEnglishText, noteType, newTitle);
+        }
+
+        public Result UpdateVideoContent(Guid contentId, string newVideoUrl, Title newTitle)
+        {
+            var content = _chapters
+                .SelectMany(c => c.Lessons)
+                .SelectMany(l => l.Contents)
+                .FirstOrDefault(co => co.Id == contentId);
+
+            if (content is null)
+            {
+                return Result.Failure(LessonErrors.ContentNotFound);
+            }
+
+            if (content is not VideoContent videoContent)
+            {
+                return Result.Failure(LessonErrors.InvalidContentType);
+            }
+
+            return videoContent.Update(newVideoUrl,newTitle);
+        }
+
+        public Result UpdateImageWithCaptionContent(Guid contentId, string newImageUrl, string? newCaption, Title newTitle)
+        {
+            var content = _chapters
+                .SelectMany(c => c.Lessons)
+                .SelectMany(l => l.Contents)
+                .FirstOrDefault(co => co.Id == contentId);
+
+            if (content is null)
+            {
+                return Result.Failure(LessonErrors.ContentNotFound);
+            }
+
+            if (content is not ImageWithCaptionContent imageContent)
+            {
+                return Result.Failure(LessonErrors.InvalidContentType);
+            }
+
+            return imageContent.Update(newImageUrl, newCaption,newTitle);
+        }
+        public Result<ExampleItem> DeleteExampleItem(Guid itemId)
+        {
+            var lesson = _chapters
+                .SelectMany(c => c.Lessons)
+                .FirstOrDefault(l => l.Contents.OfType<ExamplesGridContent>().Any(g => g.ExampleItems.Any(i => i.Id == itemId)));
+
+            if (lesson is null)
+            {
+                return Result.Failure<ExampleItem>(new Error("ExampleItem.ParentLessonNotFound", "The parent lesson for the specified item was not found."));
+            }
+
+            return lesson.DeleteExampleItem(itemId);
+        }
+
+        public Result UpdateChapterTitle(Guid chapterId, Title newTitle)
+        {
+            var chapter = _chapters.FirstOrDefault(c => c.Id == chapterId);
+            if (chapter is null)
+            {
+                return Result.Failure(CurriculumErrors.ChapterNotFound);
+            }
+
+            // You might want to check if a chapter with the new title already exists
+            if (_chapters.Any(c => c.Title.Value == newTitle.Value && c.Id != chapterId))
+            {
+                return Result.Failure(CurriculumErrors.DuplicateChapterTitle);
+            }
+
+            return chapter.UpdateTitle(newTitle);
+        }
+
+        public Result<IReadOnlyList<LessonContent>> DeleteLesson(Guid lessonId)
+        {
+            var chapter = _chapters.FirstOrDefault(c => c.Lessons.Any(l => l.Id == lessonId));
+            if (chapter is null)
+            {
+                return Result.Failure<IReadOnlyList<LessonContent>>(CurriculumErrors.LessonNotFound);
+            }
+
+            return chapter.RemoveLesson(lessonId);
+        }
+        public Result<IReadOnlyList<LessonContent>> DeleteChapter(Guid chapterId)
+        {
+            var chapterToRemove = _chapters.FirstOrDefault(c => c.Id == chapterId);
+            if (chapterToRemove is null)
+            {
+                return Result.Failure<IReadOnlyList<LessonContent>>(CurriculumErrors.ChapterNotFound);
+            }
+
+            // Collect all content from all lessons within the chapter to be deleted.
+            var contentsToDelete = chapterToRemove.Lessons
+                .SelectMany(l => l.Contents)
+                .ToList();
+
+            _chapters.Remove(chapterToRemove);
+
+            return contentsToDelete;
+        }
+        public Result PublishLesson(Guid lessonId)
+        {
+            var lesson = FindLesson(lessonId);
+            if (lesson is null) return Result.Failure(CurriculumErrors.LessonNotFound);
+            return lesson.Publish();
+        }
+
+        public Result UnpublishLesson(Guid lessonId)
+        {
+            var lesson = FindLesson(lessonId);
+            if (lesson is null) return Result.Failure(CurriculumErrors.LessonNotFound);
+            return lesson.Unpublish();
+        }
+
+        public Result UpdateLessonTitle(Guid lessonId, Title newTitle)
+        {
+            var chapter = _chapters.FirstOrDefault(c => c.Lessons.Any(l => l.Id == lessonId));
+            if (chapter is null)
+            {
+                return Result.Failure(CurriculumErrors.LessonNotFound);
+            }
+
+            // Check for duplicate lesson titles within the same chapter
+            if (chapter.Lessons.Any(l => l.Title.Value == newTitle.Value && l.Id != lessonId))
+            {
+                return Result.Failure(CurriculumErrors.DuplicateLessonTitle);
+            }
+
+            var lessonToUpdate = chapter.Lessons.First(l => l.Id == lessonId);
+            return lessonToUpdate.UpdateTitle(newTitle);
         }
     }
 
